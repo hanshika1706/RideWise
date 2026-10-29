@@ -62,7 +62,17 @@ export default function App() {
       </nav>
     </header>
 
+    
     <main className="page-wrap">
+
+  {page === "cab-booking" && (
+    <CabBooking
+      origin={origin}
+      destination={destination}
+      onBack={() => go("home")}
+    />
+  )}
+
       {page === 'login' && <section className="login-screen">
         <div className="login-card">
           <div className="login-mark"><Route size={21}/></div>
@@ -142,3 +152,17 @@ function MapDrawing() {
 function SettingToggle({ title, desc, checked, onChange }) {
   return <div className="setting-toggle"><div><strong>{title}</strong><p>{desc}</p></div><button aria-label={`Toggle ${title}`} className={`switch ${checked ? 'on' : ''}`} onClick={onChange}><span/></button></div>;
 }
+import CabBooking from "./components/CabBooking.jsx";
+<form className="search-bar-card" onSubmit={submitSearch}>
+  <div style={{ textAlign: "center", marginBottom: "35px" }}>
+  <button
+    type="button"
+    className="btn btn-blue"
+    onClick={() => go("cab-booking")}
+  >
+    <CarFront size={16} />
+    Book a Cab
+    <ArrowRight size={14} />
+  </button>
+</div>
+</form>
