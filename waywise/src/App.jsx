@@ -1,4 +1,6 @@
 import { useMemo, useState } from 'react';
+import CabBooking from "./components/CabBooking.jsx";
+import AboutUs from "./components/AboutUs.jsx";
 import {
   MapPin, Navigation, Route, Clock3, IndianRupee, ChevronDown, ChevronRight,
   ArrowLeft, ArrowRight, CarFront, ShieldCheck, Bell, Settings as SettingsIcon,
@@ -56,6 +58,12 @@ export default function App() {
       <button className="brand" onClick={() => go('home')}><span className="brand-icon"><Route size={17}/></span><span>WayWise</span></button>
       <button className="mobile-menu" onClick={() => setMobileNav(!mobileNav)} aria-label="Toggle navigation">{mobileNav ? <X size={18}/> : <Menu size={18}/>}</button>
       <nav className={mobileNav ? 'topnav nav-open' : 'topnav'}>
+        <button
+  className={page === "about" ? "nav-active" : ""}
+  onClick={() => go("about")}
+>
+  About Us
+</button>
         <button className={page === 'home' ? 'nav-active' : ''} onClick={() => go('home')}>Home</button>
         <button className={page === 'trips' || page === 'routes' || page === 'details' || page === 'confirm' || page === 'tracking' ? 'nav-active' : ''} onClick={() => go('trips')}>My Trips</button>
         <button className={page === 'profile' || page === 'settings' ? 'nav-active' : ''} onClick={() => go('profile')}>Profile</button>
@@ -64,6 +72,13 @@ export default function App() {
 
     
     <main className="page-wrap">
+      
+      {page === "about" && (
+  <AboutUs
+    onBack={() => go("home")}
+    onBookCab={() => go("cab-booking")}
+  />
+)}
 
   {page === "cab-booking" && (
     <CabBooking
@@ -97,6 +112,17 @@ export default function App() {
           <div className="search-field"><label htmlFor="home-destination">Destination</label><div><Navigation size={15}/><input id="home-destination" value={destination} onChange={e => setDestination(e.target.value)} placeholder="Enter destination mall or terminal" required/></div></div>
           <button className="btn btn-dark find-btn" type="submit">Find Routes</button>
         </form>
+        <div style={{ textAlign: "center", marginBottom: "35px" }}>
+  <button
+    type="button"
+    className="btn btn-blue"
+    onClick={() => go("cab-booking")}
+  >
+    <CarFront size={16} />
+    Book a Cab
+    <ArrowRight size={14} />
+  </button>
+</div>
         <section className="popular-section"><div className="section-label">Popular Commutes</div><div className="popular-grid">
           {[
             ['Ambience Mall','Gurugram, Haryana','32 min away'],
@@ -152,17 +178,3 @@ function MapDrawing() {
 function SettingToggle({ title, desc, checked, onChange }) {
   return <div className="setting-toggle"><div><strong>{title}</strong><p>{desc}</p></div><button aria-label={`Toggle ${title}`} className={`switch ${checked ? 'on' : ''}`} onClick={onChange}><span/></button></div>;
 }
-import CabBooking from "./components/CabBooking.jsx";
-<form className="search-bar-card" onSubmit={submitSearch}>
-  <div style={{ textAlign: "center", marginBottom: "35px" }}>
-  <button
-    type="button"
-    className="btn btn-blue"
-    onClick={() => go("cab-booking")}
-  >
-    <CarFront size={16} />
-    Book a Cab
-    <ArrowRight size={14} />
-  </button>
-</div>
-</form>
