@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import CabBooking from "./components/CabBooking.jsx";
+import AboutUs from "./components/AboutUs.jsx";
 import {
   MapPin, Navigation, Route, Clock3, IndianRupee, ChevronDown, ChevronRight,
   ArrowLeft, ArrowRight, CarFront, ShieldCheck, Bell, Settings as SettingsIcon,
@@ -57,6 +58,12 @@ export default function App() {
       <button className="brand" onClick={() => go('home')}><span className="brand-icon"><Route size={17}/></span><span>WayWise</span></button>
       <button className="mobile-menu" onClick={() => setMobileNav(!mobileNav)} aria-label="Toggle navigation">{mobileNav ? <X size={18}/> : <Menu size={18}/>}</button>
       <nav className={mobileNav ? 'topnav nav-open' : 'topnav'}>
+        <button
+  className={page === "about" ? "nav-active" : ""}
+  onClick={() => go("about")}
+>
+  About Us
+</button>
         <button className={page === 'home' ? 'nav-active' : ''} onClick={() => go('home')}>Home</button>
         <button className={page === 'trips' || page === 'routes' || page === 'details' || page === 'confirm' || page === 'tracking' ? 'nav-active' : ''} onClick={() => go('trips')}>My Trips</button>
         <button className={page === 'profile' || page === 'settings' ? 'nav-active' : ''} onClick={() => go('profile')}>Profile</button>
@@ -65,6 +72,13 @@ export default function App() {
 
     
     <main className="page-wrap">
+      
+      {page === "about" && (
+  <AboutUs
+    onBack={() => go("home")}
+    onBookCab={() => go("cab-booking")}
+  />
+)}
 
   {page === "cab-booking" && (
     <CabBooking
