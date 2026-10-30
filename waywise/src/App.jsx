@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import CabBooking from "./components/CabBooking.jsx";
 import AboutUs from "./components/AboutUs.jsx";
+import MapplsMap from "./components/MapplsMap.jsx";
 import {
   MapPin, Navigation, Route, Clock3, IndianRupee, ChevronDown, ChevronRight,
   ArrowLeft, ArrowRight, CarFront, ShieldCheck, Bell, Settings as SettingsIcon,
@@ -67,11 +68,25 @@ export default function App() {
         <button className={page === 'home' ? 'nav-active' : ''} onClick={() => go('home')}>Home</button>
         <button className={page === 'trips' || page === 'routes' || page === 'details' || page === 'confirm' || page === 'tracking' ? 'nav-active' : ''} onClick={() => go('trips')}>My Trips</button>
         <button className={page === 'profile' || page === 'settings' ? 'nav-active' : ''} onClick={() => go('profile')}>Profile</button>
+        <button
+  className={page === "map" ? "nav-active" : ""}
+  onClick={() => go("map")}
+>
+  Map
+</button>
       </nav>
     </header>
 
     
     <main className="page-wrap">
+      {page === "map" && (
+  <section style={{ padding: "24px" }}>
+    <h1>WayWise Live Map</h1>
+    <p>Explore routes using Mappls.</p>
+
+    <MapplsMap />
+  </section>
+)}
       
       {page === "about" && (
   <AboutUs
