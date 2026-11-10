@@ -1,0 +1,13 @@
+[
+  {
+    "id": "RW-98214532",
+    "pickup": "BML Munjal University",
+    "destination": "Ambience Mall",
+    "vehicle": "Mini Cab",
+    "fare": 599,
+    "paymentMethod": "cash",
+    "arrival": "6 min",
+    "status": "Confirmed",
+    "submittedAt": "2026-11-10T08:04:06.788Z"
+  }
+]

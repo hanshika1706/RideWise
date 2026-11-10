@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+waywise/node_modules/
+
+# Production build
+dist/
+waywise/dist/
+
+# Environment files
+.env
+.env.*
+waywise/.env
+waywise/.env.*
+!waywise/.env.example
+
+# IDE / System
+.DS_Store
+.vscode/
+Thumbs.db
