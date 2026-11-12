@@ -1,0 +1,17 @@
+[
+  {
+    "name": "BMU Campus",
+    "address": "Kapriwas, District Rewari, Haryana",
+    "type": "College"
+  },
+  {
+    "name": "Ambience Mall",
+    "address": "NH-8, DLF Phase 3, Gurugram",
+    "type": "Shopping"
+  },
+  {
+    "name": "Fitness Gym",
+    "address": "Sector 14, Gurugram",
+    "type": "Fitness"
+  }
+]

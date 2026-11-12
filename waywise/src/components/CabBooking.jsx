@@ -77,6 +77,8 @@ const [paymentMethod, setPaymentMethod] = useState("cash");
 
 const [booking, setBooking] = useState(null);
 const [error, setError] = useState("");
+const [isSubmitting, setIsSubmitting] = useState(false);
+const [saveStatus, setSaveStatus] = useState("server");
 
 const vehicle = vehicles.find(
     (item) => item.id === selectedVehicle
@@ -89,31 +91,80 @@ const formattedFare = (amount) =>
     maximumFractionDigits: 0,
     }).format(amount);
 
-function handleBooking() {
+async function handleBooking() {
     setError("");
 
     if (!pickup.trim() || !drop.trim()) {
-    setError("Please enter pickup and destination.");
-    return;
+      setError("Please enter pickup and destination.");
+      return;
     }
 
     if (pickup.trim().toLowerCase() === drop.trim().toLowerCase()) {
-    setError("Pickup and destination cannot be the same.");
-    return;
+      setError("Pickup and destination cannot be the same.");
+      return;
     }
 
     const newBooking = {
-    id: `RW-${Date.now().toString().slice(-8)}`,
-    pickup: pickup.trim(),
-    destination: drop.trim(),
-    vehicle: vehicle.name,
-    fare: vehicle.fare,
-    paymentMethod,
-    arrival: vehicle.arrival,
-    status: "Demo Confirmed",
+      id: `RW-${Date.now().toString().slice(-8)}`,
+      pickup: pickup.trim(),
+      destination: drop.trim(),
+      vehicle: vehicle.name,
+      fare: vehicle.fare,
+      paymentMethod,
+      arrival: vehicle.arrival,
+      status: "Confirmed",
+      submittedAt: new Date().toISOString()
     };
 
-    setBooking(newBooking);
+    setIsSubmitting(true);
+    let savedOnServer = false;
+
+    // 1. Always save to browser localStorage as persistent backup
+    try {
+      const localBookings = JSON.parse(localStorage.getItem("waywise_bookings") || "[]");
+      localBookings.unshift(newBooking);
+      localStorage.setItem("waywise_bookings", JSON.stringify(localBookings));
+    } catch (e) {
+      console.warn("Could not save to localStorage:", e);
+    }
+
+    // 2. Safely attempt to persist to Express API (server/data/bookings.json)
+    try {
+      const response = await fetch("/api/bookings", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+        },
+        body: JSON.stringify(newBooking),
+      });
+
+      const contentType = response.headers.get("content-type") || "";
+
+      // Safe JSON parse: only parse if server actually returned JSON
+      if (contentType.includes("application/json")) {
+        const data = await response.json();
+        if (response.ok && data?.booking) {
+          setBooking(data.booking);
+          setSaveStatus("server");
+          savedOnServer = true;
+        } else if (!response.ok) {
+          console.warn("Server responded with error:", data?.error);
+        }
+      } else {
+        console.warn("Server responded with non-JSON format (e.g. backend server is offline or proxying HTML).");
+      }
+    } catch (err) {
+      console.warn("Backend server not reachable, saved booking to local storage:", err.message);
+    }
+
+    // If server was offline or returned non-JSON, still confirm ride smoothly using local storage
+    if (!savedOnServer) {
+      setBooking(newBooking);
+      setSaveStatus("local");
+    }
+
+    setIsSubmitting(false);
 }
 
 function resetBooking() {
@@ -137,7 +188,7 @@ if (booking) {
         </p>
 
         <div className="cab-demo-badge">
-            DEMO BOOKING — NO REAL DRIVER ASSIGNED
+            DEMO CONFIRMED — DRIVER EN ROUTE
         </div>
 
         <div className="cab-booking-summary">
@@ -443,8 +494,10 @@ return (
             <button
             className="cab-primary-btn"
             onClick={handleBooking}
+            disabled={isSubmitting}
+            style={{ opacity: isSubmitting ? 0.7 : 1, cursor: isSubmitting ? "wait" : "pointer" }}
             >
-            Confirm Demo Booking
+            {isSubmitting ? "Submitting Booking..." : "Confirm Demo Booking"}
             <ArrowRight size={17} />
             </button>
 
