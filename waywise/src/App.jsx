@@ -745,6 +745,9 @@ export default function App() {
                 </div>
 
                 <div style={{ display: 'grid', gap: '10px', marginTop: '20px' }}>
+                  <button className="btn btn-blue full" onClick={() => go('map')}>
+                    <Compass size={15} /> Switch to Live Interactive Map View
+                  </button>
                   <button className="btn btn-dark full" onClick={() => openLink(mapsUrl)}>
                     <Navigation size={15} /> Real-Time Google Maps Navigation
                   </button>
@@ -1070,14 +1073,14 @@ export default function App() {
           />
         )}
 
-        {/* ================= LIVE MAPLS MAP VIEW ================= */}
+        {/* ================= LIVE INTERACTIVE MAP VIEW ================= */}
         {page === 'map' && (
           <section style={{ padding: '10px 0' }}>
             <div className="page-title-row">
               <div>
-                <div className="eyebrow">MAP VIEW</div>
-                <h1>WayWise Live Mappls Map</h1>
-                <p>Interactive real-time map canvas powered by Mappls SDK.</p>
+                <div className="eyebrow">LIVE GPS / CORRIDOR MONITOR</div>
+                <h1>WayWise Live Interactive Map</h1>
+                <p>Real-time Delhi–NCR highway corridor navigation, live cab ride simulation, and satellite imagery.</p>
               </div>
               <button className="btn btn-outline" onClick={() => go('home')}>
                 <ArrowLeft size={14} /> Back
