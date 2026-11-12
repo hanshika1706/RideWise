@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import CabBooking from "./components/CabBooking.jsx";
 import AboutUs from "./components/AboutUs.jsx";
 import MapplsMap from "./components/MapplsMap.jsx";
+import RouteMap from "./components/RouteMap.jsx";
 import {
   MapPin, Navigation, Route, Clock3, IndianRupee, ChevronDown, ChevronRight,
   ArrowLeft, ArrowRight, ArrowUpDown, CarFront, ShieldCheck, Bell, Settings as SettingsIcon,
@@ -563,24 +564,16 @@ export default function App() {
               {/* MAP PREVIEW CARD */}
               <div className="map-card">
                 <div className="map-head">
-                  <strong>Route Navigation Preview</strong>
-                  <span>LIVE OVERVIEW</span>
+                  <strong>Selected Route Map</strong>
+                  <span>CORRIDOR PREVIEW</span>
                 </div>
 
-                <div className="map-canvas">
-                  <MapDrawing />
-                  <div className="map-location start">
-                    <span><MapPin size={16} /></span>
-                    <b>{origin}</b>
-                  </div>
-                  <div className="map-location end">
-                    <span><Navigation size={16} /></span>
-                    <b>{destination}</b>
-                  </div>
-                  <div className="map-key">
-                    <span /> Selected: {chosenRoute.name} · {formatDistance(chosenRoute.distanceKm)}
-                  </div>
-                </div>
+                <RouteMap 
+                  selectedRoute={selectedRoute}
+                  origin={origin}
+                  destination={destination}
+                  height="340px"
+                />
 
                 <div className="map-links">
                   <button onClick={() => openLink(mapsUrl)}>
@@ -609,12 +602,17 @@ export default function App() {
               </button>
             </div>
 
-            <div className="map-card">
-              <div className="map-canvas" style={{ height: '320px' }}>
-                <MapDrawing />
-                <div className="map-location start"><span><MapPin size={16}/></span><b>{origin}</b></div>
-                <div className="map-location end"><span><Navigation size={16}/></span><b>{destination}</b></div>
+            <div className="map-card" style={{ marginBottom: '24px' }}>
+              <div className="map-head">
+                <strong>Route Alignment Map</strong>
+                <span>CORRIDOR OVERVIEW</span>
               </div>
+              <RouteMap 
+                selectedRoute={selectedRoute}
+                origin={origin}
+                destination={destination}
+                height="320px"
+              />
             </div>
 
             <div className="details-summary">
@@ -748,11 +746,13 @@ export default function App() {
             </div>
 
             <div className="tracking-layout">
-              <div className="tracking-map">
-                <MapDrawing />
-                <div className="tracking-route-line" />
-                <div className="map-location start"><span><MapPin size={16}/></span><b>{origin}</b></div>
-                <div className="map-location end"><span><Navigation size={16}/></span><b>{destination}</b></div>
+              <div className="tracking-map" style={{ padding: 0, overflow: 'hidden' }}>
+                <RouteMap 
+                  selectedRoute={selectedRoute}
+                  origin={origin}
+                  destination={destination}
+                  height="360px"
+                />
               </div>
 
               <div className="tracking-info">
