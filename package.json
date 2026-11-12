@@ -1,0 +1,12 @@
+{
+  "name": "ridewise-root",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix waywise run dev",
+    "client": "npm --prefix waywise run client",
+    "server": "npm --prefix waywise run server",
+    "build": "npm --prefix waywise run build",
+    "start": "npm --prefix waywise run dev"
+  }
+}
