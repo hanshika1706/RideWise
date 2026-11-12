@@ -8,7 +8,8 @@ import {
   ArrowLeft, ArrowRight, ArrowUpDown, CarFront, ShieldCheck, Bell, Settings as SettingsIcon,
   UserRound, Home, Search, LogOut, Plus, Trash2, Pencil, Check, LocateFixed,
   SlidersHorizontal, Eye, LockKeyhole, HelpCircle, Menu, X, ExternalLink,
-  Star, Sparkles, MessageSquare, Send, CheckCircle2, AlertCircle, Compass, Zap
+  Star, Sparkles, MessageSquare, Send, CheckCircle2, AlertCircle, Compass, Zap,
+  Bike, Car, Info
 } from 'lucide-react';
 
 const initialRoutes = [
@@ -16,6 +17,81 @@ const initialRoutes = [
   { id: 2, name: 'Route B via Old Delhi Road', tag: 'Cheapest', time: '58 min', distanceKm: 28, fare: 490, toll: 0, color: 'green', detail: 'Avoids all toll booths using local arterial roads with moderate traffic.' },
   { id: 3, name: 'Route C via Cyber City Flyover', tag: 'Scenic', time: '50 min', distanceKm: 30, fare: 540, toll: 50, color: 'blue', detail: 'Smooth flyover bypass with minimal signals and one minor toll.' }
 ];
+
+const COMMUTE_MODES = [
+  {
+    id: 'sedan',
+    name: 'Cab Sedan',
+    iconType: 'sedan',
+    seats: 4,
+    desc: 'Comfortable 4-seater sedan, best for highway commutes',
+    baseFare: 50,
+    baseKm: 2,
+    perKm: 15,
+    platformFee: 16,
+    hasToll: true
+  },
+  {
+    id: 'mini',
+    name: 'Cab Mini',
+    iconType: 'mini',
+    seats: 4,
+    desc: 'Pocket-friendly compact hatchback for up to 4 passengers',
+    baseFare: 40,
+    baseKm: 2,
+    perKm: 12.5,
+    platformFee: 8,
+    hasToll: true
+  },
+  {
+    id: 'auto',
+    name: 'Auto Rickshaw',
+    iconType: 'auto',
+    seats: 3,
+    desc: 'Affordable metered 3-wheeler for quick city transfers',
+    baseFare: 30,
+    baseKm: 2,
+    perKm: 10,
+    platformFee: 10,
+    hasToll: false
+  },
+  {
+    id: 'bike',
+    name: 'Bike Taxi',
+    iconType: 'bike',
+    seats: 1,
+    desc: 'Fastest single-rider commute to zip through traffic',
+    baseFare: 20,
+    baseKm: 2,
+    perKm: 6,
+    platformFee: 5,
+    hasToll: false
+  }
+];
+
+function calculateFareBreakdown(mode, route) {
+  const dist = route?.distanceKm || 28;
+  const extraKm = Math.max(0, dist - mode.baseKm);
+  const distanceCharge = Math.round(extraKm * mode.perKm);
+  const tollCharge = mode.hasToll ? (route?.toll || 0) : 0;
+  const platformFee = mode.platformFee;
+  const total = mode.baseFare + distanceCharge + tollCharge + platformFee;
+
+  return {
+    mode,
+    route,
+    distanceKm: dist,
+    extraKm,
+    perKmRate: mode.perKm,
+    baseFare: mode.baseFare,
+    baseKm: mode.baseKm,
+    distanceCharge,
+    tollCharge,
+    platformFee,
+    total,
+    hasToll: mode.hasToll && tollCharge > 0
+  };
+}
 
 const fallbackPlaces = [
   { name: 'Home', address: 'Palam Vihar, Gurugram, Haryana', type: 'Home' },
@@ -68,12 +144,27 @@ export default function App() {
   const [bookedRides, setBookedRides] = useState([]);
 
   // Cab Vehicle Selection State
-  const [selectedVehicle, setSelectedVehicle] = useState('mini');
+  const [selectedVehicle, setSelectedVehicle] = useState('bike');
   const [paymentMethod, setPaymentMethod] = useState('cash');
 
+  // Commute Mode & Breakdown Modal State (Matching User's Screenshots)
+  const [selectedCommuteMode, setSelectedCommuteMode] = useState('bike');
+  const [showBreakdownModal, setShowBreakdownModal] = useState(false);
+  const [breakdownModalData, setBreakdownModalData] = useState(null);
+
+  const activeCommute = useMemo(() => {
+    return COMMUTE_MODES.find(m => m.id === selectedCommuteMode) || COMMUTE_MODES[3];
+  }, [selectedCommuteMode]);
+
   const activeVehicle = useMemo(() => {
-    return VEHICLE_OPTIONS.find(v => v.id === selectedVehicle) || VEHICLE_OPTIONS[2];
+    return VEHICLE_OPTIONS.find(v => v.id === selectedVehicle) || VEHICLE_OPTIONS[0];
   }, [selectedVehicle]);
+
+  function openBreakdownModal(mode, route) {
+    const data = calculateFareBreakdown(mode, route || chosenRoute);
+    setBreakdownModalData(data);
+    setShowBreakdownModal(true);
+  }
   
   // Modals
   const [showAddPlaceModal, setShowAddPlaceModal] = useState(false);
@@ -494,73 +585,117 @@ export default function App() {
                 <p>Comparing routes from <b>{origin}</b> to <b>{destination}</b>.</p>
               </div>
               <div style={{ display: 'flex', gap: '10px' }}>
-                <button className="btn btn-outline" onClick={() => go('home')}>
-                  <ArrowLeft size={14} /> Back to Search
+                <button className="btn btn-outline" onClick={() => go('home')} style={{ height: '40px', borderRadius: '10px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <ArrowLeft size={15} /> Edit Search
+                </button>
+                <button className="btn btn-blue" onClick={() => go('confirm')} style={{ height: '40px', borderRadius: '10px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <CarFront size={16} /> Book Cab for this Route
                 </button>
               </div>
             </div>
 
-            {/* CAB VEHICLE CATEGORY SELECTOR */}
-            <div style={{ marginBottom: '16px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <strong style={{ fontSize: '12px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  Choose Cab Category:
-                </strong>
-                <span style={{ fontSize: '12px', color: '#64748b' }}>
-                  Fares dynamically include route tolls
-                </span>
-              </div>
-              <div className="vehicle-selector-grid">
-                {VEHICLE_OPTIONS.map(v => {
-                  const isSelected = selectedVehicle === v.id;
-                  return (
-                    <button
-                      key={v.id}
-                      type="button"
-                      onClick={() => {
-                        setSelectedVehicle(v.id);
-                        notify(`${v.name} selected.`);
-                      }}
-                      className={`vehicle-chip-btn ${isSelected ? 'selected' : ''}`}
-                    >
-                      <span className="vehicle-chip-emoji">{v.icon}</span>
-                      <div className="vehicle-chip-content">
-                        <div className="vehicle-chip-title">
-                          <strong>{v.name}</strong>
-                          {v.popular && <span className="popular-badge">POPULAR</span>}
-                        </div>
-                        <small>₹{v.fare} base · {v.time} ETA</small>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* FILTER CHIPS */}
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+            {/* FILTER CHIPS (MATCHING SCREENSHOT 1) */}
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
               {[
                 { id: 'all', label: 'All Options' },
                 { id: 'fastest', label: '⚡ Fastest' },
                 { id: 'cheapest', label: '💰 Lowest Cost' },
                 { id: 'toll-free', label: '🛣️ Toll-Free' }
-              ].map(f => (
-                <button
-                  key={f.id}
-                  onClick={() => setRouteFilter(f.id)}
-                  className={`btn ${routeFilter === f.id ? 'btn-dark' : 'btn-outline'}`}
-                  style={{ height: '34px', fontSize: '12px', borderRadius: '20px' }}
-                >
-                  {f.label}
-                </button>
-              ))}
+              ].map(f => {
+                const isActive = routeFilter === f.id;
+                return (
+                  <button
+                    key={f.id}
+                    onClick={() => setRouteFilter(f.id)}
+                    style={{
+                      height: '38px',
+                      fontSize: '13px',
+                      fontWeight: '700',
+                      borderRadius: '24px',
+                      padding: '0 18px',
+                      cursor: 'pointer',
+                      border: isActive ? '1.5px solid #0f172a' : '1.5px solid #e2e8f0',
+                      background: isActive ? '#0f172a' : '#ffffff',
+                      color: isActive ? '#ffffff' : '#334155',
+                      boxShadow: isActive ? '0 4px 12px rgba(15, 23, 42, 0.2)' : '0 1px 3px rgba(0,0,0,0.04)',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    {f.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* SELECT COMMUTE MODE CONTAINER (MATCHING SCREENSHOT 1) */}
+            <div className="commute-mode-container">
+              <div className="commute-mode-header">
+                <strong>SELECT COMMUTE MODE</strong>
+                <span>Fares auto-calculated from route distance & tolls</span>
+              </div>
+
+              <div className="commute-mode-grid">
+                {COMMUTE_MODES.map(mode => {
+                  const isSelected = selectedCommuteMode === mode.id;
+                  const breakdown = calculateFareBreakdown(mode, chosenRoute);
+
+                  return (
+                    <div
+                      key={mode.id}
+                      onClick={() => {
+                        setSelectedCommuteMode(mode.id);
+                        setSelectedVehicle(mode.id);
+                        notify(`${mode.name} selected.`);
+                      }}
+                      className={`commute-card ${isSelected ? 'active' : ''}`}
+                    >
+                      <div>
+                        <div className="commute-card-top">
+                          <div className="commute-card-icon">
+                            {mode.iconType === 'sedan' && <CarFront size={18} />}
+                            {mode.iconType === 'mini' && <Car size={18} />}
+                            {mode.iconType === 'auto' && <Zap size={18} />}
+                            {mode.iconType === 'bike' && <Bike size={18} />}
+                          </div>
+                          <span className="commute-seats-badge">
+                            {mode.seats} seat{mode.seats > 1 ? 's' : ''}
+                          </span>
+                        </div>
+                        <h3>{mode.name}</h3>
+                        <p>{mode.desc}</p>
+                      </div>
+
+                      <div className="commute-card-bottom">
+                        <div>
+                          <strong className="commute-price">₹{breakdown.total}</strong>
+                          {breakdown.hasToll && (
+                            <span className="commute-toll-note">
+                              Incl. ₹{breakdown.tollCharge} toll
+                            </span>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          className="commute-breakdown-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openBreakdownModal(mode, chosenRoute);
+                          }}
+                        >
+                          <Info size={13} /> Breakdown
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
             <div className="routes-layout">
               <div className="route-list">
                 {filteredRoutes.map(route => {
                   const isSelected = selectedRoute === route.id;
-                  const routeFare = activeVehicle.fare + (route.toll || 0);
+                  const breakdown = calculateFareBreakdown(activeCommute, route);
 
                   return (
                     <article 
@@ -583,8 +718,8 @@ export default function App() {
                           <b>{formatDistance(route.distanceKm)}</b>
                         </div>
                         <div>
-                          <small>EST. FARE ({activeVehicle.name})</small>
-                          <b style={{ color: '#2563eb' }}>₹{routeFare}</b>
+                          <small>EST. FARE</small>
+                          <b style={{ color: '#0f172a' }}>₹{breakdown.total}</b>
                         </div>
                         <div>
                           <small>TOLL CHARGES</small>
@@ -595,30 +730,28 @@ export default function App() {
                       <p>{route.detail}</p>
 
                       <div style={{ display: 'flex', gap: '10px', marginTop: '14px' }}>
-                        {isSelected ? (
-                          <button 
-                            className="btn btn-blue full"
-                            style={{ height: '42px', fontWeight: '700', borderRadius: '10px' }}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              go('confirm');
-                            }}
-                          >
-                            Book {activeVehicle.name} · ₹{routeFare} →
-                          </button>
-                        ) : (
-                          <button 
-                            className="btn btn-dark full"
-                            style={{ height: '42px', fontWeight: '700', borderRadius: '10px' }}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedRoute(route.id);
-                              notify(`${route.name} selected.`);
-                            }}
-                          >
-                            Select this Route
-                          </button>
-                        )}
+                        <button 
+                          className="btn btn-dark" 
+                          style={{ flex: 1, height: '44px', fontWeight: '700', borderRadius: '10px' }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedRoute(route.id);
+                            go('details');
+                          }}
+                        >
+                          Select & Inspect Details
+                        </button>
+                        <button 
+                          type="button"
+                          className="btn btn-outline" 
+                          style={{ height: '44px', fontWeight: '600', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '6px', padding: '0 16px' }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openBreakdownModal(activeCommute, route);
+                          }}
+                        >
+                          <Info size={14} /> Breakdown
+                        </button>
                       </div>
                     </article>
                   );
@@ -628,8 +761,8 @@ export default function App() {
               {/* MAP PREVIEW CARD */}
               <div className="map-card">
                 <div className="map-head">
-                  <strong>Selected Route Map</strong>
-                  <span>CORRIDOR PREVIEW</span>
+                  <strong>Route Navigation Preview</strong>
+                  <span>LIVE OVERVIEW</span>
                 </div>
 
                 <RouteMap 
@@ -650,6 +783,142 @@ export default function App() {
                 </div>
               </div>
             </div>
+
+            {/* ================= FARE BREAKDOWN ENGINE MODAL (MATCHING SCREENSHOT 3) ================= */}
+            {showBreakdownModal && breakdownModalData && (
+              <div 
+                className="breakdown-modal-overlay" 
+                onClick={() => setShowBreakdownModal(false)}
+              >
+                <div 
+                  className="breakdown-modal-card" 
+                  onClick={e => e.stopPropagation()}
+                >
+                  {/* Modal Header */}
+                  <div style={{ padding: '22px 24px 14px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div>
+                      <span style={{ fontSize: '11px', fontWeight: '800', color: '#2563eb', letterSpacing: '0.06em', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>
+                        FARE BREAKDOWN ENGINE
+                      </span>
+                      <h2 style={{ fontSize: '20px', fontWeight: '800', color: '#0f172a', margin: 0 }}>
+                        {breakdownModalData.mode.name} Estimate
+                      </h2>
+                    </div>
+                    <button 
+                      onClick={() => setShowBreakdownModal(false)}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    >
+                      <X size={20} />
+                    </button>
+                  </div>
+
+                  <div style={{ padding: '0 24px 24px 24px' }}>
+                    {/* Dark Blue Hero Card */}
+                    <div style={{
+                      background: 'linear-gradient(135deg, #0b172a 0%, #1e3a8a 100%)',
+                      borderRadius: '14px',
+                      padding: '18px 20px',
+                      color: '#ffffff',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: '20px'
+                    }}>
+                      <div>
+                        <span style={{ fontSize: '10px', fontWeight: '700', letterSpacing: '0.05em', color: '#93c5fd', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>
+                          ESTIMATED TOTAL FARE
+                        </span>
+                        <strong style={{ fontSize: '32px', fontWeight: '800', color: '#ffffff' }}>
+                          ₹{breakdownModalData.total}
+                        </strong>
+                      </div>
+                      <span style={{
+                        background: 'rgba(255, 255, 255, 0.15)',
+                        backdropFilter: 'blur(4px)',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        borderRadius: '20px',
+                        padding: '6px 14px',
+                        fontSize: '12px',
+                        fontWeight: '600',
+                        color: '#ffffff'
+                      }}>
+                        {breakdownModalData.distanceKm} km commute
+                      </span>
+                    </div>
+
+                    {/* Breakdown Table Rows */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '22px' }}>
+                      {/* Base Fare */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div>
+                          <strong style={{ fontSize: '14px', color: '#0f172a', display: 'block' }}>Base Fare</strong>
+                          <small style={{ fontSize: '12px', color: '#64748b' }}>Includes first {breakdownModalData.baseKm} km</small>
+                        </div>
+                        <strong style={{ fontSize: '15px', color: '#0f172a' }}>₹{breakdownModalData.baseFare}</strong>
+                      </div>
+
+                      {/* Distance Charge */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div>
+                          <strong style={{ fontSize: '14px', color: '#0f172a', display: 'block' }}>Distance Charge</strong>
+                          <small style={{ fontSize: '12px', color: '#64748b' }}>{breakdownModalData.extraKm} km @ ₹{breakdownModalData.perKmRate}/km</small>
+                        </div>
+                        <strong style={{ fontSize: '15px', color: '#0f172a' }}>₹{breakdownModalData.distanceCharge}</strong>
+                      </div>
+
+                      {/* Toll Charges */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div>
+                          <strong style={{ fontSize: '14px', color: '#0f172a', display: 'block' }}>Toll Charges</strong>
+                          <small style={{ fontSize: '12px', color: '#64748b' }}>
+                            {breakdownModalData.tollCharge > 0 ? `FASTag toll on ${breakdownModalData.route?.name}` : 'No tolls on this route / mode'}
+                          </small>
+                        </div>
+                        <strong style={{ fontSize: '15px', color: '#0f172a' }}>
+                          {breakdownModalData.tollCharge > 0 ? `₹${breakdownModalData.tollCharge}` : '₹0 (Free)'}
+                        </strong>
+                      </div>
+
+                      {/* Platform & Safety Fee */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div>
+                          <strong style={{ fontSize: '14px', color: '#0f172a', display: 'block' }}>Platform & Safety Fee</strong>
+                          <small style={{ fontSize: '12px', color: '#64748b' }}>App access & 24x7 support</small>
+                        </div>
+                        <strong style={{ fontSize: '15px', color: '#0f172a' }}>+₹{breakdownModalData.platformFee}</strong>
+                      </div>
+                    </div>
+
+                    {/* Note with Shield */}
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      padding: '12px 14px',
+                      background: '#f8fafc',
+                      borderRadius: '10px',
+                      border: '1px solid #e2e8f0',
+                      marginBottom: '20px'
+                    }}>
+                      <ShieldCheck size={16} style={{ color: '#64748b', flexShrink: 0 }} />
+                      <span style={{ fontSize: '11px', color: '#64748b', lineHeight: '1.4' }}>
+                        Fares are computed transparently based on route distance and toll information.
+                      </span>
+                    </div>
+
+                    {/* Action Button */}
+                    <button 
+                      type="button"
+                      onClick={() => setShowBreakdownModal(false)}
+                      className="btn btn-blue full"
+                      style={{ height: '44px', fontWeight: '700', borderRadius: '10px', fontSize: '14px' }}
+                    >
+                      Got it
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </>
         )}
 

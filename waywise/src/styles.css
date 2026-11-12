@@ -2092,3 +2092,201 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   white-space: nowrap;
 }
 
+/* COMMUTE MODE SELECTOR IN ROUTES (MATCHING SCREENSHOT 1) */
+.commute-mode-container {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 18px 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.commute-mode-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.commute-mode-header strong {
+  font-size: 11px;
+  font-weight: 800;
+  color: #475569;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.commute-mode-header span {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.commute-mode-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+@media (max-width: 900px) {
+  .commute-mode-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 520px) {
+  .commute-mode-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.commute-card {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 16px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.commute-card:hover {
+  border-color: #93c5fd;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+}
+
+.commute-card.active {
+  border-color: #2563eb;
+  background: #f8faff;
+  box-shadow: 0 0 0 1px #2563eb, 0 4px 14px rgba(37, 99, 235, 0.12);
+}
+
+.commute-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.commute-card-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  transition: all 0.2s ease;
+}
+
+.commute-card.active .commute-card-icon {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.commute-card:not(.active) .commute-card-icon {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.commute-seats-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  background: #f1f5f9;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.commute-card h3 {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 4px 0;
+}
+
+.commute-card p {
+  font-size: 11px;
+  color: #64748b;
+  line-height: 1.4;
+  margin: 0 0 16px 0;
+  min-height: 32px;
+}
+
+.commute-card-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding-top: 10px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.commute-price {
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1;
+}
+
+.commute-toll-note {
+  font-size: 10px;
+  color: #10b981;
+  font-weight: 600;
+  display: block;
+  margin-top: 3px;
+}
+
+.commute-breakdown-btn {
+  background: none;
+  border: none;
+  font-size: 12px;
+  color: #2563eb;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 0;
+  transition: color 0.15s ease;
+}
+
+.commute-breakdown-btn:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+/* FARE BREAKDOWN MODAL (MATCHING SCREENSHOT 3) */
+.breakdown-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(5px);
+  display: grid;
+  place-items: center;
+  z-index: 10000;
+  padding: 16px;
+}
+
+.breakdown-modal-card {
+  background: #ffffff;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 450px;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.35);
+  animation: modalScaleUp 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalScaleUp {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+
