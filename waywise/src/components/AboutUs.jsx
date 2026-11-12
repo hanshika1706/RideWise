@@ -2,7 +2,6 @@ import {
   ArrowLeft,
   ArrowRight,
   CarFront,
-  MapPin,
   Route,
   TrafficCone,
   Camera,
@@ -44,10 +43,9 @@ const problems = [
   },
   {
     icon: IndianRupee,
-    title: "Multi-Vehicle Fare Comparison",
+    title: "Unclear Travel Expenses",
     description:
-      "Compare estimated fares for Hatchbacks, Sedans, Auto Rickshaws, and Bike Taxis using route distance and toll inputs.",
-    status: "Available in demo",
+      "Commuters may find it difficult to compare transportation costs and understand how distance, vehicle type, and tolls affect their fares.",
   },
   {
     icon: Navigation,
@@ -66,10 +64,10 @@ const solutions = [
     status: "Available in demo",
   },
   {
-    icon: CarFront,
-    title: "Cab Booking Experience",
+    icon: IndianRupee,
+    title: "Multi-Vehicle Fare Comparison",
     description:
-      "Explore different vehicle categories, compare sample fares, and simulate a cab booking.",
+      "Compare estimated fares for Hatchbacks, Sedans, Auto Rickshaws, and Bike Taxis using route distance and toll inputs.",
     status: "Available in demo",
   },
   {
@@ -87,10 +85,10 @@ const solutions = [
     status: "Planned feature",
   },
   {
-    icon: IndianRupee,
-    title: "Transparent Fare Comparison",
+    icon: CarFront,
+    title: "Transparent Fare Breakdown",
     description:
-      "Help commuters understand estimated travel costs and toll charges before making a decision.",
+      "Help commuters understand estimated base fares, distance charges, and toll costs before making a travel decision.",
     status: "Available in demo",
   },
   {
@@ -111,7 +109,7 @@ export default function AboutUs({ onBack, onCompareFares }) {
         <button
           type="button"
           className="about-primary-btn"
-          onClick={onCompareFares}
+          onClick={onBack}
         >
           <ArrowLeft size={17} />
           Back to Home
@@ -140,7 +138,7 @@ export default function AboutUs({ onBack, onCompareFares }) {
               className="about-primary-btn"
               onClick={onCompareFares}
             >
-              Explore Cab Booking
+              Explore Fare Comparison
               <ArrowRight size={17} />
             </button>
 
@@ -246,7 +244,7 @@ export default function AboutUs({ onBack, onCompareFares }) {
 
             <p>
               WayWise brings route comparison and
-              a cab-booking prototype together,
+              multi-vehicle fare estimation together,
               with more intelligent navigation
               capabilities planned for the future.
             </p>
@@ -354,8 +352,8 @@ export default function AboutUs({ onBack, onCompareFares }) {
             </h2>
 
             <p>
-              Try our cab-booking prototype and
-              discover how WayWise helps you
+              Explore our fare comparison experience
+              and discover how WayWise helps you
               compare travel options.
             </p>
           </div>
@@ -363,9 +361,9 @@ export default function AboutUs({ onBack, onCompareFares }) {
           <button
             type="button"
             className="about-primary-btn"
-            onClick={onBookCab}
+            onClick={onCompareFares}
           >
-            Book a Demo Cab
+            Compare Travel Fares
             <ArrowRight size={17} />
           </button>
         </section>
