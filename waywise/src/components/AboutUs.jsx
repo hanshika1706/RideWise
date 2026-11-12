@@ -47,6 +47,13 @@ const problems = [
       "Base fares, distance charges and toll expenses can make it difficult for commuters to understand what they are actually paying for.",
   },
   {
+
+    icon: IndianRupee,
+    title: "Unclear Travel Expenses",
+    description:
+      "Commuters may find it difficult to compare transportation costs and understand how distance, vehicle type, and tolls affect their fares.",
+  },
+  {
     icon: Navigation,
     title: "Limited Travel Flexibility",
     description:
@@ -56,7 +63,7 @@ const problems = [
     icon: MapPin,
     title: "Fragmented Travel Information",
     description:
-      "Finding route information, comparing transportation costs and planning a journey across different platforms can be inconvenient.",
+      "Finding route information, comparing transportation costs and planning a journey across different platforms can be inconvenient."
   },
 ];
 
@@ -69,10 +76,10 @@ const solutions = [
     status: "Available in demo",
   },
   {
-    icon: Route,
-    title: "Intelligent Route Comparison",
+    icon: IndianRupee,
+    title: "Multi-Vehicle Fare Comparison",
     description:
-      "Compare alternative journeys using route distance, estimated travel duration and toll charges to make informed travel decisions.",
+      "Compare estimated fares for Hatchbacks, Sedans, Auto Rickshaws, and Bike Taxis using route distance and toll inputs.",
     status: "Available in demo",
   },
   {
@@ -91,9 +98,9 @@ const solutions = [
   },
   {
     icon: CarFront,
-    title: "Cab Booking Experience",
+    title: "Transparent Fare Breakdown",
     description:
-      "Explore vehicle options, review your journey details and experience a convenient cab-booking flow.",
+      "Help commuters understand estimated base fares, distance charges, and toll costs before making a travel decision.",
     status: "Available in demo",
   },
   {
@@ -256,8 +263,7 @@ export default function AboutUs({ onBack, onCompareFares }) {
 
             <p>
               WayWise brings route comparison and
-              multi-vehicle fare estimation together
-              in one commuter-friendly experience,
+              multi-vehicle fare estimation together,
               with more intelligent navigation
               capabilities planned for the future.
             </p>
@@ -462,9 +468,9 @@ export default function AboutUs({ onBack, onCompareFares }) {
             </h2>
 
             <p>
-              Explore our route-planning experience,
-              compare travel options and discover
-              smarter ways to estimate your commute.
+              Explore our fare comparison experience
+              and discover how WayWise helps you
+              compare travel options.
             </p>
           </div>
 
