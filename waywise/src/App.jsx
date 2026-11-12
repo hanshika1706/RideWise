@@ -345,7 +345,7 @@ export default function App() {
                   </div>
 
                   <button className="btn btn-blue find-btn" type="submit">
-                    <Search size={16} /> Find Routes
+                    <Search size={16} /> Compare Routes & Book Ride
                   </button>
                 </div>
 
