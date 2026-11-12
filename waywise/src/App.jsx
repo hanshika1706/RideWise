@@ -24,6 +24,14 @@ const fallbackPlaces = [
   { name: 'Fitness Gym', address: 'Sector 14, Gurugram', type: 'Fitness' }
 ];
 
+const VEHICLE_OPTIONS = [
+  { id: 'bike', name: 'Bike', desc: 'Fast solo commute', fare: 249, time: '3 min', seats: 1, icon: '🛵' },
+  { id: 'auto', name: 'City Auto', desc: 'Affordable breezy ride', fare: 399, time: '5 min', seats: 3, icon: '🛺' },
+  { id: 'mini', name: 'Mini Cab', desc: 'Air-conditioned everyday ride', fare: 599, time: '6 min', seats: 4, icon: '🚗', popular: true },
+  { id: 'sedan', name: 'Sedan', desc: 'Extra legroom & comfort', fare: 749, time: '8 min', seats: 4, icon: '🚘' },
+  { id: 'suv', name: 'SUV Plus', desc: 'Spacious 6-seater for groups', fare: 999, time: '10 min', seats: 6, icon: '🚙' }
+];
+
 export default function App() {
   const [page, setPage] = useState('home');
   const [origin, setOrigin] = useState('BML Munjal University');
@@ -58,6 +66,14 @@ export default function App() {
   // Saved places & Bookings from server JSON
   const [saved, setSaved] = useState(fallbackPlaces);
   const [bookedRides, setBookedRides] = useState([]);
+
+  // Cab Vehicle Selection State
+  const [selectedVehicle, setSelectedVehicle] = useState('mini');
+  const [paymentMethod, setPaymentMethod] = useState('cash');
+
+  const activeVehicle = useMemo(() => {
+    return VEHICLE_OPTIONS.find(v => v.id === selectedVehicle) || VEHICLE_OPTIONS[2];
+  }, [selectedVehicle]);
   
   // Modals
   const [showAddPlaceModal, setShowAddPlaceModal] = useState(false);
@@ -161,6 +177,10 @@ export default function App() {
     return initialRoutes.find(r => r.id === selectedRoute) || initialRoutes[0];
   }, [selectedRoute]);
 
+  const calculatedFare = useMemo(() => {
+    return activeVehicle.fare + (chosenRoute?.toll || 0);
+  }, [activeVehicle, chosenRoute]);
+
   const filteredRoutes = useMemo(() => {
     if (routeFilter === 'fastest') return initialRoutes.filter(r => r.tag === 'Fastest');
     if (routeFilter === 'cheapest') return initialRoutes.filter(r => r.tag === 'Cheapest');
@@ -193,15 +213,15 @@ export default function App() {
     notify('Locations swapped.');
   }
 
-  async function bookRoute(route) {
+  async function handleConfirmBooking() {
     const newBooking = {
       id: `RW-${Math.floor(10000000 + Math.random() * 90000000)}`,
       pickup: origin,
       destination: destination,
-      vehicle: 'Standard Sedan',
-      fare: route.fare,
-      paymentMethod: 'cash',
-      arrival: '5 min',
+      vehicle: activeVehicle.name,
+      fare: calculatedFare,
+      paymentMethod,
+      arrival: activeVehicle.time,
       status: 'Confirmed',
       submittedAt: new Date().toISOString()
     };
@@ -230,7 +250,7 @@ export default function App() {
       localStorage.setItem('waywise_bookings', JSON.stringify([newBooking, ...existing]));
     } catch {}
     setRideConfirmed(true);
-    notify(`Booked ${route.name}! Driver arriving in 5 mins.`);
+    notify(`Ride confirmed with ${activeVehicle.name}! Driver arriving in ${activeVehicle.time}.`);
     go('tracking');
   }
 
@@ -289,7 +309,7 @@ export default function App() {
             <Home size={14} /> Home
           </button>
           <button className={page === 'routes' || page === 'details' || page === 'confirm' || page === 'tracking' ? 'nav-active' : ''} onClick={() => go('routes')}>
-            <Compass size={14} /> Routes
+            <Compass size={14} /> Routes & Cabs
           </button>
           <button className={page === 'trips' ? 'nav-active' : ''} onClick={() => go('trips')}>
             <Clock3 size={14} /> My Trips {bookedRides.length > 0 && `(${bookedRides.length})`}
@@ -480,6 +500,43 @@ export default function App() {
               </div>
             </div>
 
+            {/* CAB VEHICLE CATEGORY SELECTOR */}
+            <div style={{ marginBottom: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <strong style={{ fontSize: '12px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Choose Cab Category:
+                </strong>
+                <span style={{ fontSize: '12px', color: '#64748b' }}>
+                  Fares dynamically include route tolls
+                </span>
+              </div>
+              <div className="vehicle-selector-grid">
+                {VEHICLE_OPTIONS.map(v => {
+                  const isSelected = selectedVehicle === v.id;
+                  return (
+                    <button
+                      key={v.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedVehicle(v.id);
+                        notify(`${v.name} selected.`);
+                      }}
+                      className={`vehicle-chip-btn ${isSelected ? 'selected' : ''}`}
+                    >
+                      <span className="vehicle-chip-emoji">{v.icon}</span>
+                      <div className="vehicle-chip-content">
+                        <div className="vehicle-chip-title">
+                          <strong>{v.name}</strong>
+                          {v.popular && <span className="popular-badge">POPULAR</span>}
+                        </div>
+                        <small>₹{v.fare} base · {v.time} ETA</small>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             {/* FILTER CHIPS */}
             <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
               {[
@@ -501,53 +558,71 @@ export default function App() {
 
             <div className="routes-layout">
               <div className="route-list">
-                {filteredRoutes.map(route => (
-                  <article 
-                    key={route.id} 
-                    className={`route-option ${selectedRoute === route.id ? 'chosen' : ''}`}
-                    onClick={() => { setSelectedRoute(route.id); notify(`${route.name} selected.`); }}
-                  >
-                    <div className="route-option-top">
-                      <strong>{route.name}</strong>
-                      <span className={`route-tag ${route.color}`}>{route.tag}</span>
-                    </div>
+                {filteredRoutes.map(route => {
+                  const isSelected = selectedRoute === route.id;
+                  const routeFare = activeVehicle.fare + (route.toll || 0);
 
-                    <div className="route-stats">
-                      <div>
-                        <small>TRAVEL TIME</small>
-                        <b>{route.time}</b>
+                  return (
+                    <article 
+                      key={route.id} 
+                      className={`route-option ${isSelected ? 'chosen' : ''}`}
+                      onClick={() => { setSelectedRoute(route.id); notify(`${route.name} selected.`); }}
+                    >
+                      <div className="route-option-top">
+                        <strong>{route.name}</strong>
+                        <span className={`route-tag ${route.color}`}>{route.tag}</span>
                       </div>
-                      <div>
-                        <small>DISTANCE</small>
-                        <b>{formatDistance(route.distanceKm)}</b>
-                      </div>
-                      <div>
-                        <small>EST. FARE</small>
-                        <b>₹{route.fare}</b>
-                      </div>
-                      <div>
-                        <small>TOLL CHARGES</small>
-                        <b>{route.toll === 0 ? 'Free' : `₹${route.toll}`}</b>
-                      </div>
-                    </div>
 
-                    <p>{route.detail}</p>
+                      <div className="route-stats">
+                        <div>
+                          <small>TRAVEL TIME</small>
+                          <b>{route.time}</b>
+                        </div>
+                        <div>
+                          <small>DISTANCE</small>
+                          <b>{formatDistance(route.distanceKm)}</b>
+                        </div>
+                        <div>
+                          <small>EST. FARE ({activeVehicle.name})</small>
+                          <b style={{ color: '#2563eb' }}>₹{routeFare}</b>
+                        </div>
+                        <div>
+                          <small>TOLL CHARGES</small>
+                          <b>{route.toll === 0 ? 'Free' : `₹${route.toll}`}</b>
+                        </div>
+                      </div>
 
-                    <div style={{ display: 'flex', gap: '10px', marginTop: '14px' }}>
-                      <button 
-                        className={`btn ${selectedRoute === route.id ? 'btn-blue' : 'btn-dark'} full`}
-                        style={{ height: '42px', fontWeight: '700', borderRadius: '10px' }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedRoute(route.id);
-                          go('details');
-                        }}
-                      >
-                        {selectedRoute === route.id ? 'Proceed with Selected Route' : 'Select & Inspect Details'}
-                      </button>
-                    </div>
-                  </article>
-                ))}
+                      <p>{route.detail}</p>
+
+                      <div style={{ display: 'flex', gap: '10px', marginTop: '14px' }}>
+                        {isSelected ? (
+                          <button 
+                            className="btn btn-blue full"
+                            style={{ height: '42px', fontWeight: '700', borderRadius: '10px' }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              go('confirm');
+                            }}
+                          >
+                            Book {activeVehicle.name} · ₹{routeFare} →
+                          </button>
+                        ) : (
+                          <button 
+                            className="btn btn-dark full"
+                            style={{ height: '42px', fontWeight: '700', borderRadius: '10px' }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedRoute(route.id);
+                              notify(`${route.name} selected.`);
+                            }}
+                          >
+                            Select this Route
+                          </button>
+                        )}
+                      </div>
+                    </article>
+                  );
+                })}
               </div>
 
               {/* MAP PREVIEW CARD */}
@@ -637,11 +712,8 @@ export default function App() {
                   <ArrowLeft size={14} /> Change Route
                 </button>
                 <div style={{ display: 'flex', gap: '10px' }}>
-                  <button className="btn btn-dark" onClick={() => go('confirm')}>
-                    Confirm Itinerary <ArrowRight size={14} />
-                  </button>
-                  <button className="btn btn-blue" onClick={() => go('cab-booking')}>
-                    <CarFront size={16} /> Book Cab Now
+                  <button className="btn btn-blue" onClick={() => go('confirm')}>
+                    Proceed to Cab Selection <ArrowRight size={14} />
                   </button>
                 </div>
               </div>
@@ -652,11 +724,11 @@ export default function App() {
         {/* ================= RIDE CONFIRMATION VIEW ================= */}
         {page === 'confirm' && (
           <section className="center-page">
-            <div className="confirmation-card">
+            <div className="confirmation-card" style={{ maxWidth: '580px' }}>
               <div className="card-heading">
                 <div>
-                  <h1>Journey Confirmation</h1>
-                  <p>Please review and verify your planned journey itinerary.</p>
+                  <h1>Choose Cab & Confirm Journey</h1>
+                  <p>Select your vehicle category and payment method to book your ride.</p>
                 </div>
                 <span className="confirm-icon"><CarFront size={24} /></span>
               </div>
@@ -681,7 +753,7 @@ export default function App() {
 
               <div className="confirm-table">
                 <div>
-                  <span>Selected Route</span>
+                  <span>Selected Highway Route</span>
                   <strong>{chosenRoute.name}</strong>
                 </div>
                 <div>
@@ -693,28 +765,95 @@ export default function App() {
                   <strong>{formatDistance(chosenRoute.distanceKm)}</strong>
                 </div>
                 <div>
-                  <span>Estimated Total Cost</span>
-                  <strong>₹{chosenRoute.fare} (Toll: ₹{chosenRoute.toll})</strong>
+                  <span>Highway Toll</span>
+                  <strong>{chosenRoute.toll === 0 ? '₹0 (Toll-Free)' : `₹${chosenRoute.toll} FASTag`}</strong>
                 </div>
               </div>
 
-              <div className="vehicle-choice">
-                <span className="vehicle-icon"><CarFront size={22} /></span>
-                <div>
-                  <strong>Standard Sedan / City Cab</strong>
-                  <small>Seats 4 passengers · AC · Comfortable everyday commute</small>
+              {/* INTERACTIVE CAB CATEGORY SELECTOR */}
+              <div style={{ marginTop: '20px', marginBottom: '18px' }}>
+                <strong style={{ fontSize: '14px', color: '#0f172a', display: 'block', marginBottom: '10px' }}>
+                  Select Cab Category:
+                </strong>
+                <div style={{ display: 'grid', gap: '8px' }}>
+                  {VEHICLE_OPTIONS.map(v => {
+                    const isSelected = selectedVehicle === v.id;
+                    const fareWithToll = v.fare + (chosenRoute.toll || 0);
+                    return (
+                      <div
+                        key={v.id}
+                        onClick={() => setSelectedVehicle(v.id)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '12px 16px',
+                          borderRadius: '12px',
+                          border: isSelected ? '2px solid #2563eb' : '1px solid #e2e8f0',
+                          background: isSelected ? '#eff6ff' : '#ffffff',
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease'
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                          <span style={{ fontSize: '24px' }}>{v.icon}</span>
+                          <div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <strong style={{ fontSize: '14px', color: '#0f172a' }}>{v.name}</strong>
+                              {v.popular && (
+                                <span style={{ fontSize: '10px', fontWeight: '800', background: '#dbeafe', color: '#2563eb', padding: '1px 6px', borderRadius: '4px' }}>
+                                  RECOMMENDED
+                                </span>
+                              )}
+                              <span style={{ fontSize: '11px', color: '#64748b' }}>• {v.seats} seats</span>
+                            </div>
+                            <span style={{ fontSize: '12px', color: '#64748b' }}>{v.desc} · Arrives in {v.time}</span>
+                          </div>
+                        </div>
+
+                        <div style={{ textAlign: 'right' }}>
+                          <strong style={{ fontSize: '16px', color: '#0f172a' }}>₹{fareWithToll}</strong>
+                          <span style={{ fontSize: '10px', color: '#10b981', display: 'block', fontWeight: '600' }}>Toll Included</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* PAYMENT METHOD SELECTION */}
+              <div style={{ marginBottom: '22px' }}>
+                <strong style={{ fontSize: '13px', color: '#0f172a', display: 'block', marginBottom: '8px' }}>
+                  Payment Method:
+                </strong>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  {[
+                    { id: 'cash', label: '💵 Cash to Driver' },
+                    { id: 'upi', label: '📱 UPI / QR Code' },
+                    { id: 'card', label: '💳 Credit / Debit Card' }
+                  ].map(p => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => setPaymentMethod(p.id)}
+                      className={`btn ${paymentMethod === p.id ? 'btn-dark' : 'btn-outline'}`}
+                      style={{ height: '36px', fontSize: '12px', borderRadius: '8px', flex: 1 }}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
                 </div>
               </div>
 
               <div className="confirm-actions">
-                <button className="btn btn-outline" onClick={() => go('details')}>
-                  Cancel
+                <button className="btn btn-outline" onClick={() => go('routes')}>
+                  ← Change Route
                 </button>
                 <button 
                   className="btn btn-blue" 
-                  onClick={() => bookRoute(chosenRoute)}
+                  onClick={handleConfirmBooking}
                 >
-                  Confirm & Start Journey
+                  Confirm & Book {activeVehicle.name} · ₹{calculatedFare}
                 </button>
               </div>
             </div>
@@ -804,7 +943,7 @@ export default function App() {
                 <h1>My Trips & Bookings</h1>
                 <p>View your recent journeys and active cab bookings ({bookedRides.length} ride{bookedRides.length === 1 ? '' : 's'}).</p>
               </div>
-              <button className="btn btn-blue" onClick={() => go('cab-booking')}>
+              <button className="btn btn-blue" onClick={() => go('routes')}>
                 <Plus size={15} /> Book a New Ride
               </button>
             </div>
@@ -830,7 +969,7 @@ export default function App() {
                       onClick={() => {
                         setOrigin(b.pickup);
                         setDestination(b.destination);
-                        go('cab-booking');
+                        go('routes');
                       }}
                     >
                       Rebook
