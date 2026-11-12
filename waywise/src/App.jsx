@@ -533,17 +533,17 @@ export default function App() {
 
                     <p>{route.detail}</p>
 
-                    <div style={{ marginTop: '14px' }}>
+                    <div style={{ display: 'flex', gap: '10px', marginTop: '14px' }}>
                       <button 
                         className={`btn ${selectedRoute === route.id ? 'btn-blue' : 'btn-dark'} full`}
                         style={{ height: '42px', fontWeight: '700', borderRadius: '10px' }}
                         onClick={(e) => {
                           e.stopPropagation();
                           setSelectedRoute(route.id);
-                          bookRoute(route);
+                          go('details');
                         }}
                       >
-                        ⚡ Book This Route · ₹{route.fare}
+                        {selectedRoute === route.id ? 'Proceed with Selected Route' : 'Select & Inspect Details'}
                       </button>
                     </div>
                   </article>
@@ -559,9 +559,10 @@ export default function App() {
 
                 <RouteMap 
                   selectedRoute={selectedRoute}
+                  onSelectRoute={setSelectedRoute}
                   origin={origin}
                   destination={destination}
-                  height="340px"
+                  height="420px"
                 />
 
                 <div className="map-links">
