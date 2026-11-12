@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { 
-  MapPin, Navigation, Layers, Compass, ZoomIn, ZoomOut, 
-  Play, Pause, RotateCcw, CarFront, ShieldCheck, Clock, Gauge, AlertCircle
+  Compass, ZoomIn, ZoomOut, Play, Pause, RotateCcw
 } from "lucide-react";
 
 export default function MapplsMap() {
@@ -14,7 +13,7 @@ export default function MapplsMap() {
   const carMarkerRef = useRef(null);
   const animFrameRef = useRef(null);
 
-  const [activeLayer, setActiveLayer] = useState("voyager"); // 'voyager', 'streets', 'satellite'
+  const [activeLayer, setActiveLayer] = useState("streets"); // 'streets', 'satellite', 'topo'
   const [activeLocation, setActiveLocation] = useState("route");
   const [showTraffic, setShowTraffic] = useState(true);
   const [isSimulating, setIsSimulating] = useState(false);
@@ -33,40 +32,40 @@ export default function MapplsMap() {
       coords: [28.2472, 76.8142],
       km: "0.0 km",
       eta: "Start Point",
-      description: "University main gate pick-up zone, connected directly to NH-48 Service Lane."
+      description: "University main campus departure gate on NH-48 corridor."
     },
     {
       id: "bilaspur",
       name: "Bilaspur Chowk",
-      subtitle: "NH-48 Corridor Junction",
+      subtitle: "NH-48 Highway Junction",
       badge: "Highway Junction",
       badgeColor: "#3b82f6",
       coords: [28.2750, 76.8450],
       km: "5.8 km",
       eta: "+7 min",
-      description: "Major flyover connecting Pataudi & Tauru roads into the expressway."
+      description: "Major flyover connecting Pataudi & Tauru arterial roads."
     },
     {
       id: "manesar",
       name: "IMT Manesar Hub",
       subtitle: "Industrial & Tech Corridor",
-      badge: "Commercial Cluster",
+      badge: "Tech Corridor",
       badgeColor: "#8b5cf6",
       coords: [28.3550, 76.9380],
       km: "15.2 km",
       eta: "+20 min",
-      description: "Automobile and manufacturing hub with wide 8-lane expressway access."
+      description: "Automobile & manufacturing hub with 8-lane express highway."
     },
     {
       id: "toll",
       name: "Kherki Daula Toll Plaza",
       subtitle: "NH-48 FASTag Toll Barrier",
-      badge: "₹80 Toll Checkpoint",
+      badge: "₹80 FASTag Toll",
       badgeColor: "#f59e0b",
       coords: [28.4055, 76.9935],
       km: "21.6 km",
       eta: "+28 min",
-      description: "100% automated FASTag cashless toll plaza. Cab toll: ₹80 per passage."
+      description: "Automated cashless FASTag toll. Cab passage fee: ₹80."
     },
     {
       id: "rajiv",
@@ -77,29 +76,29 @@ export default function MapplsMap() {
       coords: [28.4350, 77.0320],
       km: "26.0 km",
       eta: "+34 min",
-      description: "Central Gurugram junction offering underpass bypass to bypass inner traffic."
+      description: "Central Gurugram junction with underpass expressway bypass."
     },
     {
       id: "iffco",
       name: "IFFCO Chowk",
       subtitle: "MG Road & Yellow Line Metro",
-      badge: "Metro Hub",
+      badge: "Metro Interchange",
       badgeColor: "#3b82f6",
       coords: [28.4720, 77.0650],
       km: "29.4 km",
       eta: "+39 min",
-      description: "Major transit point connecting Delhi Metro Line 2 and Gurgaon city center."
+      description: "Major transit point connecting Delhi Metro Line 2."
     },
     {
       id: "cyber",
-      name: "DLF Cyber City / Cyber Hub",
-      subtitle: "DLF Phase 2 / Rapid Metro",
-      badge: "IT Tech Park",
+      name: "DLF Cyber City",
+      subtitle: "Cyber Hub / DLF Phase 2",
+      badge: "Corporate Tech Park",
       badgeColor: "#06b6d4",
       coords: [28.4950, 77.0890],
       km: "31.1 km",
       eta: "+42 min",
-      description: "Premier corporate center with express elevated corridor over the highway."
+      description: "Corporate hub with dedicated elevated express flyover."
     },
     {
       id: "ambience",
@@ -110,7 +109,7 @@ export default function MapplsMap() {
       coords: [28.5038, 77.0972],
       km: "32.4 km",
       eta: "+45 min",
-      description: "Iconic shopping and entertainment destination right next to Delhi Rajokri border."
+      description: "Shopping & lifestyle destination beside Delhi Rajokri border."
     }
   ];
 
@@ -205,41 +204,44 @@ export default function MapplsMap() {
       });
       mapInstanceRef.current = map;
 
-      // High-performance Open GIS Tile Layers (Zero keys required)
-      const voyager = L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
+      // 100% Free Public GIS Tile Layers (Zero keys required, Zero watermarks)
+      // 1. Esri World Street Map (Crisp, clean roads, labels, and landmarks)
+      const streets = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}", {
+        attribution: '&copy; <a href="https://www.esri.com/">Esri</a>, DeLorme, NAVTEQ, TomTom',
         maxZoom: 19
       });
 
-      const streets = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-        maxZoom: 19
-      });
-
+      // 2. Esri World Imagery (High-Resolution Satellite)
       const satellite = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
-        attribution: '&copy; <a href="https://www.esri.com/">Esri</a>, Earthstar Geographics',
+        attribution: '&copy; <a href="https://www.esri.com/">Esri</a>, Earthstar Geographics, Maxar',
         maxZoom: 18
       });
 
-      layersRef.current = { voyager, streets, satellite };
-      voyager.addTo(map);
+      // 3. Esri World Topo Map (Topographic and terrain details)
+      const topo = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}", {
+        attribution: '&copy; <a href="https://www.esri.com/">Esri</a>, USGS, Intermap',
+        maxZoom: 19
+      });
 
-      // Main Corridor Route Glow Polyline
+      layersRef.current = { streets, satellite, topo };
+      streets.addTo(map);
+
+      // Main Corridor Route Polyline
       const mainPolyline = L.polyline(FULL_ROUTE_COORDS, {
         color: "#2563eb",
         weight: 6,
-        opacity: 0.85,
+        opacity: 0.9,
         lineCap: "round",
         lineJoin: "round"
       }).addTo(map);
       polylineRef.current = mainPolyline;
 
-      // Build Real-Time Highway Traffic Density Segments
+      // Highway Traffic Flow Segments
       const trafficSegments = [
-        { coords: FULL_ROUTE_COORDS.slice(0, 5), color: "#10b981", label: "Smooth (68 km/h)" }, // BMU to Manesar
-        { coords: FULL_ROUTE_COORDS.slice(4, 8), color: "#f59e0b", label: "Moderate near Toll (32 km/h)" }, // Manesar to Toll
-        { coords: FULL_ROUTE_COORDS.slice(7, 11), color: "#10b981", label: "Smooth Express (62 km/h)" }, // Toll to Rajiv Chowk
-        { coords: FULL_ROUTE_COORDS.slice(10, 15), color: "#3b82f6", label: "City Flow (45 km/h)" }, // IFFCO Chowk to Ambience
+        { coords: FULL_ROUTE_COORDS.slice(0, 5), color: "#10b981", label: "Smooth (68 km/h)" },
+        { coords: FULL_ROUTE_COORDS.slice(4, 8), color: "#f59e0b", label: "Moderate near Toll (32 km/h)" },
+        { coords: FULL_ROUTE_COORDS.slice(7, 11), color: "#10b981", label: "Smooth Express (62 km/h)" },
+        { coords: FULL_ROUTE_COORDS.slice(10, 15), color: "#3b82f6", label: "City Flow (45 km/h)" },
       ];
 
       trafficPolylinesRef.current = trafficSegments.map(seg => {
@@ -251,7 +253,7 @@ export default function MapplsMap() {
         }).addTo(map);
       });
 
-      // Custom HTML Marker Helper
+      // Marker Icon Generator
       const makeMarker = (wp) => {
         const icon = L.divIcon({
           className: "interactive-waypoint-marker",
@@ -270,7 +272,6 @@ export default function MapplsMap() {
               font-weight: 800;
               font-size: 13px;
               cursor: pointer;
-              transition: transform 0.2s ease;
             ">
               ${wp.id === "bmu" ? "A" : wp.id === "ambience" ? "B" : wp.id === "toll" ? "₹" : "•"}
             </div>
@@ -424,7 +425,7 @@ export default function MapplsMap() {
     };
   }, [isSimulating]);
 
-  // Handle Layer switching (Voyager, Streets, Satellite)
+  // Handle Layer switching (Streets, Satellite, Topo)
   const switchLayer = (type) => {
     const map = mapInstanceRef.current;
     if (!map || !layersRef.current[type]) return;
@@ -739,7 +740,7 @@ export default function MapplsMap() {
         </div>
       </div>
 
-      {/* 3. Real Interactive Map Canvas */}
+      {/* 3. Real Interactive Map Canvas (100% Watermark-Free) */}
       <div 
         style={{
           position: "relative",
@@ -783,9 +784,9 @@ export default function MapplsMap() {
             }}
           >
             {[
-              { id: "voyager", label: "Clean Map" },
-              { id: "streets", label: "OpenStreetMap" },
-              { id: "satellite", label: "Satellite View" }
+              { id: "streets", label: "Street Map" },
+              { id: "satellite", label: "Satellite View" },
+              { id: "topo", label: "Terrain / Topo" }
             ].map(style => (
               <button
                 type="button"
@@ -1039,7 +1040,7 @@ export default function MapplsMap() {
         <div style={{ background: "#ffffff", padding: "14px 18px", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
           <small style={{ color: "#64748b", textTransform: "uppercase", fontSize: "11px", fontWeight: "700" }}>MAP PLATFORM</small>
           <strong style={{ display: "block", fontSize: "18px", color: "#10b981", marginTop: "2px" }}>100% Free GIS</strong>
-          <span style={{ fontSize: "12px", color: "#64748b" }}>Leaflet + OpenStreetMap</span>
+          <span style={{ fontSize: "12px", color: "#64748b" }}>No Watermarks · Zero Keys</span>
         </div>
       </div>
     </div>
