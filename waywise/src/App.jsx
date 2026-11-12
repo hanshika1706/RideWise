@@ -533,28 +533,17 @@ export default function App() {
 
                     <p>{route.detail}</p>
 
-                    <div style={{ display: 'flex', gap: '10px', marginTop: '12px' }}>
+                    <div style={{ marginTop: '14px' }}>
                       <button 
-                        className="btn btn-blue"
-                        style={{ flex: 1, fontWeight: '700' }}
+                        className={`btn ${selectedRoute === route.id ? 'btn-blue' : 'btn-dark'} full`}
+                        style={{ height: '42px', fontWeight: '700', borderRadius: '10px' }}
                         onClick={(e) => {
                           e.stopPropagation();
                           setSelectedRoute(route.id);
                           bookRoute(route);
                         }}
                       >
-                        ⚡ Book Now (₹{route.fare})
-                      </button>
-                      <button 
-                        className="btn btn-outline"
-                        style={{ fontSize: '12px' }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedRoute(route.id);
-                          go('details');
-                        }}
-                      >
-                        Inspect Details
+                        ⚡ Book This Route · ₹{route.fare}
                       </button>
                     </div>
                   </article>

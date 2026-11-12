@@ -271,3 +271,4 @@ export default function RouteMap({ selectedRoute = 1, origin = "BML Munjal Unive
     </div>
   );
 }
+
