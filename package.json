@@ -10,3 +10,4 @@
     "start": "npm --prefix waywise run dev"
   }
 }
+
