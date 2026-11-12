@@ -1,78 +1,219 @@
 import { useEffect, useRef, useState } from "react";
-import { MapPin, Navigation, ZoomIn, ZoomOut, Layers, ExternalLink, Info } from "lucide-react";
+import { MapPin, Navigation, Layers, Compass, ZoomIn, ZoomOut, ShieldCheck, ExternalLink, RefreshCw } from "lucide-react";
 
 export default function MapplsMap() {
-  const mapRef = useRef(null);
-  const mapInstance = useRef(null);
-  const [hasKey, setHasKey] = useState(false);
-  const [error, setError] = useState("");
-  const [zoomLevel, setZoomLevel] = useState(12);
-  const [mapStyle, setMapStyle] = useState("Standard");
+  const mapContainerRef = useRef(null);
+  const mapInstanceRef = useRef(null);
+  const layersRef = useRef({});
+  const polylineRef = useRef(null);
+
+  const [activeLayer, setActiveLayer] = useState("voyager"); // 'voyager', 'streets', 'satellite'
+  const [mapLoaded, setMapLoaded] = useState(false);
+  const [activeLocation, setActiveLocation] = useState("route");
+
+  // Real coordinates for the corridor
+  const BMU_COORDS = [28.2472, 76.8142]; // BML Munjal University, Kapriwas
+  const TOLL_COORDS = [28.4055, 76.9935]; // Kherki Daula Toll Plaza
+  const AMBIENCE_COORDS = [28.5038, 77.0972]; // Ambience Mall, Gurugram
+
+  // Realistic highway coordinates route along NH-48
+  const ROUTE_POINTS = [
+    BMU_COORDS,
+    [28.2650, 76.8320],
+    [28.2950, 76.8650],
+    [28.3280, 76.9020],
+    [28.3550, 76.9380], // Manesar
+    TOLL_COORDS,        // Kherki Daula Toll
+    [28.4350, 77.0320], // Rajiv Chowk Gurugram
+    [28.4720, 77.0650], // IFFCO Chowk
+    [28.4950, 77.0890], // Cyber City
+    AMBIENCE_COORDS     // Ambience Mall
+  ];
 
   useEffect(() => {
-    const key = import.meta.env.VITE_MAPPLS_KEY;
+    let isCancelled = false;
 
-    if (!key) {
-      setHasKey(false);
-      return;
-    }
-
-    setHasKey(true);
-    let cancelled = false;
-
-    function initializeMap() {
-      if (cancelled || !mapRef.current) return;
-
-      if (!window.mappls?.Map) {
-        setError("Mappls SDK did not initialize.");
-        return;
+    // Dynamically inject Leaflet CSS & JS
+    const loadLeaflet = async () => {
+      if (!document.getElementById("leaflet-css")) {
+        const link = document.createElement("link");
+        link.id = "leaflet-css";
+        link.rel = "stylesheet";
+        link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+        document.head.appendChild(link);
       }
 
-      try {
-        console.log("Initializing Mappls map...");
-        mapInstance.current = new window.mappls.Map("mappls-map", {
-          center: [28.4595, 77.0266],
-          zoom: 12,
+      if (!window.L) {
+        await new Promise((resolve, reject) => {
+          const script = document.createElement("script");
+          script.id = "leaflet-js";
+          script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+          script.onload = resolve;
+          script.onerror = reject;
+          document.head.appendChild(script);
         });
-        console.log("Mappls map initialized.");
-      } catch (err) {
-        console.error("Mappls initialization failed:", err);
-        setError(err.message || "Map initialization failed.");
       }
-    }
 
-    const existingScript = document.querySelector('script[data-mappls-sdk="true"]');
+      if (isCancelled || !mapContainerRef.current) return;
 
-    if (existingScript) {
-      if (window.mappls?.Map) {
-        initializeMap();
-      } else {
-        existingScript.addEventListener("load", initializeMap, { once: true });
+      const L = window.L;
+
+      // Clean up previous instance if any
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
       }
-    } else {
-      const script = document.createElement("script");
-      script.dataset.mapplsSdk = "true";
-      script.src = `https://sdk.mappls.com/map/sdk/web?v=3.0&access_token=${encodeURIComponent(key)}`;
-      script.async = true;
-      script.onload = initializeMap;
-      script.onerror = () => {
-        setError("Failed to download Mappls SDK.");
-      };
-      document.head.appendChild(script);
-    }
+
+      // Initialize map centered between BMU and Ambience Mall
+      const map = L.map(mapContainerRef.current, {
+        center: [28.3750, 76.9550],
+        zoom: 11,
+        zoomControl: false,
+      });
+      mapInstanceRef.current = map;
+
+      // Define real tile layers (100% Free, Zero API Keys required)
+      const voyager = L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        maxZoom: 19
+      });
+
+      const streets = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19
+      });
+
+      const satellite = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
+        attribution: '&copy; <a href="https://www.esri.com/">Esri</a>, USGS, NOAA',
+        maxZoom: 18
+      });
+
+      layersRef.current = { voyager, streets, satellite };
+      voyager.addTo(map);
+
+      // Custom marker icon helper
+      const createIcon = (color, label) => L.divIcon({
+        className: "custom-map-marker",
+        html: `
+          <div style="
+            background: ${color};
+            color: #ffffff;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #ffffff;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            font-weight: bold;
+            font-size: 13px;
+          ">
+            ${label}
+          </div>
+        `,
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+        popupAnchor: [0, -32]
+      });
+
+      // 1. BMU Marker
+      const bmuMarker = L.marker(BMU_COORDS, { icon: createIcon("#10b981", "A") }).addTo(map);
+      bmuMarker.bindPopup(`
+        <div style="font-family: inherit; padding: 4px;">
+          <strong style="color: #065f46; font-size: 14px; display: block; margin-bottom: 2px;">BML Munjal University</strong>
+          <span style="color: #64748b; font-size: 12px; display: block;">Kapriwas, Rewari / Gurugram</span>
+          <span style="display: inline-block; background: #ecfdf5; color: #047857; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 12px; margin-top: 6px;">
+            Pickup Hub
+          </span>
+        </div>
+      `);
+
+      // 2. Ambience Mall Marker
+      const ambienceMarker = L.marker(AMBIENCE_COORDS, { icon: createIcon("#2563eb", "B") }).addTo(map);
+      ambienceMarker.bindPopup(`
+        <div style="font-family: inherit; padding: 4px;">
+          <strong style="color: #1e40af; font-size: 14px; display: block; margin-bottom: 2px;">Ambience Mall</strong>
+          <span style="color: #64748b; font-size: 12px; display: block;">NH-8, DLF Phase 3, Gurugram</span>
+          <span style="display: inline-block; background: #eff6ff; color: #1d4ed8; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 12px; margin-top: 6px;">
+            Destination Hub
+          </span>
+        </div>
+      `);
+
+      // 3. Toll Plaza Marker
+      const tollMarker = L.marker(TOLL_COORDS, { icon: createIcon("#f59e0b", "₹") }).addTo(map);
+      tollMarker.bindPopup(`
+        <div style="font-family: inherit; padding: 4px;">
+          <strong style="color: #92400e; font-size: 13px; display: block; margin-bottom: 2px;">Kherki Daula Toll Plaza</strong>
+          <span style="color: #64748b; font-size: 11px; display: block;">NH-48 FASTag automated toll plaza</span>
+          <strong style="color: #b45309; font-size: 12px; display: block; margin-top: 4px;">Car / Cab Toll: ₹80</strong>
+        </div>
+      `);
+
+      // 4. Glowing Blue Route Polyline
+      const routePolyline = L.polyline(ROUTE_POINTS, {
+        color: "#2563eb",
+        weight: 6,
+        opacity: 0.85,
+        lineCap: "round",
+        lineJoin: "round"
+      }).addTo(map);
+      polylineRef.current = routePolyline;
+
+      // Fit map view to encompass the entire journey
+      map.fitBounds(routePolyline.getBounds(), { padding: [50, 50] });
+
+      setMapLoaded(true);
+    };
+
+    loadLeaflet().catch(err => {
+      console.error("Leaflet load error:", err);
+    });
 
     return () => {
-      cancelled = true;
-      if (mapInstance.current?.remove) {
-        mapInstance.current.remove();
+      isCancelled = true;
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
       }
-      mapInstance.current = null;
     };
   }, []);
 
+  // Handle Map Style switching (Voyager, Streets, Satellite)
+  const switchLayer = (type) => {
+    const map = mapInstanceRef.current;
+    if (!map || !layersRef.current[type]) return;
+
+    Object.values(layersRef.current).forEach(layer => {
+      if (map.hasLayer(layer)) map.removeLayer(layer);
+    });
+
+    layersRef.current[type].addTo(map);
+    setActiveLayer(type);
+  };
+
+  // Focus Navigation
+  const focusLocation = (loc) => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    setActiveLocation(loc);
+
+    if (loc === "route" && polylineRef.current) {
+      map.fitBounds(polylineRef.current.getBounds(), { padding: [50, 50] });
+    } else if (loc === "bmu") {
+      map.flyTo(BMU_COORDS, 14, { duration: 1.2 });
+    } else if (loc === "ambience") {
+      map.flyTo(AMBIENCE_COORDS, 14, { duration: 1.2 });
+    } else if (loc === "toll") {
+      map.flyTo(TOLL_COORDS, 15, { duration: 1.2 });
+    }
+  };
+
   return (
     <div style={{ width: "100%", maxWidth: "1150px", margin: "0 auto" }}>
-      {/* Information Header */}
+      {/* Route & Status Header Bar */}
       <div 
         style={{
           background: "#ffffff",
@@ -84,295 +225,275 @@ export default function MapplsMap() {
           justifyContent: "space-between",
           alignItems: "center",
           flexWrap: "wrap",
-          gap: "12px",
+          gap: "14px",
           boxShadow: "0 2px 8px rgba(15, 23, 42, 0.04)"
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           <div 
             style={{
-              width: "36px",
-              height: "36px",
-              borderRadius: "8px",
-              background: "#dbeafe",
-              color: "#2563eb",
+              width: "40px",
+              height: "40px",
+              borderRadius: "10px",
+              background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)",
+              color: "#ffffff",
               display: "grid",
-              placeItems: "center"
+              placeItems: "center",
+              boxShadow: "0 2px 8px rgba(37, 99, 235, 0.3)"
             }}
           >
-            <MapPin size={20} />
+            <Compass size={22} />
           </div>
           <div>
-            <strong style={{ display: "block", fontSize: "15px", color: "#0f172a" }}>
-              Delhi NCR Highway Corridor (NH-48)
+            <strong style={{ display: "block", fontSize: "16px", color: "#0f172a", fontWeight: "800" }}>
+              Delhi–NCR Highway Corridor (NH-48)
             </strong>
-            <span style={{ fontSize: "12px", color: "#64748b" }}>
-              BML Munjal University (Rewari) ➔ Ambience Mall (Gurugram)
+            <span style={{ fontSize: "13px", color: "#64748b" }}>
+              BML Munjal University ➔ Ambience Mall, Gurugram (32 km · ~45 min)
             </span>
           </div>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <span 
+        {/* Quick Hub Navigation Pills */}
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+          <button 
+            type="button"
+            className="btn"
             style={{
+              height: "34px",
               fontSize: "12px",
-              fontWeight: "700",
-              padding: "4px 10px",
               borderRadius: "20px",
-              background: hasKey ? "#ecfdf5" : "#eff6ff",
-              color: hasKey ? "#059669" : "#2563eb",
-              border: hasKey ? "1px solid #a7f3d0" : "1px solid #bfdbfe"
+              background: activeLocation === "route" ? "#2563eb" : "#f1f5f9",
+              color: activeLocation === "route" ? "#ffffff" : "#475569",
+              border: 0
             }}
+            onClick={() => focusLocation("route")}
           >
-            {hasKey ? "● Mappls SDK Active" : "● Interactive Live Simulation"}
-          </span>
+            Full Route
+          </button>
+          <button 
+            type="button"
+            className="btn"
+            style={{
+              height: "34px",
+              fontSize: "12px",
+              borderRadius: "20px",
+              background: activeLocation === "bmu" ? "#10b981" : "#f1f5f9",
+              color: activeLocation === "bmu" ? "#ffffff" : "#475569",
+              border: 0
+            }}
+            onClick={() => focusLocation("bmu")}
+          >
+            📍 BMU Campus
+          </button>
+          <button 
+            type="button"
+            className="btn"
+            style={{
+              height: "34px",
+              fontSize: "12px",
+              borderRadius: "20px",
+              background: activeLocation === "ambience" ? "#2563eb" : "#f1f5f9",
+              color: activeLocation === "ambience" ? "#ffffff" : "#475569",
+              border: 0
+            }}
+            onClick={() => focusLocation("ambience")}
+          >
+            📍 Ambience Mall
+          </button>
+          <button 
+            type="button"
+            className="btn"
+            style={{
+              height: "34px",
+              fontSize: "12px",
+              borderRadius: "20px",
+              background: activeLocation === "toll" ? "#f59e0b" : "#f1f5f9",
+              color: activeLocation === "toll" ? "#ffffff" : "#475569",
+              border: 0
+            }}
+            onClick={() => focusLocation("toll")}
+          >
+            🛣️ Kherki Daula Toll
+          </button>
         </div>
       </div>
 
-      {/* Main Map Canvas Area */}
-      <div
-        id="mappls-map"
-        ref={mapRef}
+      {/* Real Live Map Container */}
+      <div 
         style={{
+          position: "relative",
           width: "100%",
           height: "560px",
           minHeight: "560px",
-          backgroundColor: "#e2e8f0",
-          border: "1px solid #cbd5e1",
           borderRadius: "16px",
           overflow: "hidden",
-          position: "relative",
+          border: "1px solid #cbd5e1",
           boxShadow: "0 10px 25px -3px rgba(15, 23, 42, 0.1)"
         }}
       >
-        {/* Fallback interactive simulation if Mappls key is not present */}
-        {!hasKey && (
-          <div style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}>
-            <svg 
-              style={{ width: "100%", height: "100%", background: mapStyle === "Satellite" ? "#1e293b" : "#e2e8f0" }} 
-              viewBox="0 0 900 560" 
-              preserveAspectRatio="none"
-            >
-              {/* Roads network grid */}
-              <g stroke={mapStyle === "Satellite" ? "#334155" : "#cbd5e1"} strokeWidth="10" fill="none">
-                <path d="M-50 120 L950 360" />
-                <path d="M-50 420 L950 100" />
-                <path d="M150 -50 L350 600" />
-                <path d="M450 -50 L580 600" />
-                <path d="M750 -50 L650 600" />
-                <path d="M-50 260 L950 260" />
-              </g>
+        <div 
+          ref={mapContainerRef} 
+          style={{ width: "100%", height: "100%", background: "#f8fafc" }} 
+        />
 
-              {/* Highway NH-48 Glowing Route */}
-              <path 
-                d="M120 400 C 260 360, 360 220, 520 260 S 740 340, 800 130" 
-                stroke="#3b82f6" 
-                strokeWidth="8" 
-                strokeLinecap="round" 
-                fill="none" 
-                filter="drop-shadow(0 0 8px rgba(59, 130, 246, 0.6))"
-              />
-              <path 
-                d="M120 400 C 260 360, 360 220, 520 260 S 740 340, 800 130" 
-                stroke="#ffffff" 
-                strokeWidth="2.5" 
-                strokeDasharray="6 6" 
-                fill="none"
-              />
-            </svg>
-
-            {/* Origin Pin */}
-            <div 
+        {/* Floating Layer Switcher (Streets, Satellite, Voyager) */}
+        <div 
+          style={{
+            position: "absolute",
+            top: "16px",
+            right: "16px",
+            zIndex: 1000,
+            background: "rgba(255, 255, 255, 0.95)",
+            backdropFilter: "blur(6px)",
+            padding: "4px",
+            borderRadius: "30px",
+            boxShadow: "0 4px 14px rgba(0, 0, 0, 0.15)",
+            display: "flex",
+            gap: "4px",
+            border: "1px solid #e2e8f0"
+          }}
+        >
+          {[
+            { id: "voyager", label: "Clean Map" },
+            { id: "streets", label: "OpenStreetMap" },
+            { id: "satellite", label: "Satellite View" }
+          ].map(style => (
+            <button
+              type="button"
+              key={style.id}
+              onClick={() => switchLayer(style.id)}
               style={{
-                position: "absolute",
-                left: "14%",
-                bottom: "26%",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                background: "#ffffff",
-                padding: "8px 14px",
-                borderRadius: "30px",
-                boxShadow: "0 4px 14px rgba(0, 0, 0, 0.15)",
-                border: "2px solid #10b981",
-                fontSize: "13px",
+                border: 0,
+                background: activeLayer === style.id ? "#2563eb" : "transparent",
+                color: activeLayer === style.id ? "#ffffff" : "#475569",
+                padding: "6px 14px",
+                borderRadius: "20px",
+                fontSize: "12px",
                 fontWeight: "700",
-                color: "#0f172a"
+                cursor: "pointer",
+                transition: "all 0.15s ease"
               }}
             >
-              <div 
-                style={{
-                  width: "24px",
-                  height: "24px",
-                  borderRadius: "50%",
-                  background: "#ecfdf5",
-                  color: "#10b981",
-                  display: "grid",
-                  placeItems: "center"
-                }}
-              >
-                <MapPin size={14} />
-              </div>
-              BML Munjal University
-            </div>
+              {style.label}
+            </button>
+          ))}
+        </div>
 
-            {/* Destination Pin */}
-            <div 
-              style={{
-                position: "absolute",
-                right: "12%",
-                top: "20%",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                background: "#ffffff",
-                padding: "8px 14px",
-                borderRadius: "30px",
-                boxShadow: "0 4px 14px rgba(0, 0, 0, 0.15)",
-                border: "2px solid #2563eb",
-                fontSize: "13px",
-                fontWeight: "700",
-                color: "#0f172a"
-              }}
-            >
-              <div 
-                style={{
-                  width: "24px",
-                  height: "24px",
-                  borderRadius: "50%",
-                  background: "#dbeafe",
-                  color: "#2563eb",
-                  display: "grid",
-                  placeItems: "center"
-                }}
-              >
-                <Navigation size={14} />
-              </div>
-              Ambience Mall, Gurugram
-            </div>
+        {/* Floating Zoom Controls */}
+        <div 
+          style={{
+            position: "absolute",
+            bottom: "24px",
+            right: "16px",
+            zIndex: 1000,
+            display: "flex",
+            flexDirection: "column",
+            gap: "8px"
+          }}
+        >
+          <button 
+            type="button" 
+            style={{
+              width: "42px",
+              height: "42px",
+              background: "#ffffff",
+              border: "1px solid #cbd5e1",
+              borderRadius: "10px",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.12)",
+              display: "grid",
+              placeItems: "center",
+              cursor: "pointer",
+              color: "#0f172a"
+            }}
+            onClick={() => mapInstanceRef.current?.zoomIn()}
+            title="Zoom in"
+          >
+            <ZoomIn size={20} />
+          </button>
+          <button 
+            type="button" 
+            style={{
+              width: "42px",
+              height: "42px",
+              background: "#ffffff",
+              border: "1px solid #cbd5e1",
+              borderRadius: "10px",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.12)",
+              display: "grid",
+              placeItems: "center",
+              cursor: "pointer",
+              color: "#0f172a"
+            }}
+            onClick={() => mapInstanceRef.current?.zoomOut()}
+            title="Zoom out"
+          >
+            <ZoomOut size={20} />
+          </button>
+        </div>
 
-            {/* Kherki Daula Toll Booth Marker */}
-            <div 
-              style={{
-                position: "absolute",
-                left: "56%",
-                top: "46%",
-                background: "#ffffff",
-                border: "1px solid #f59e0b",
-                borderRadius: "8px",
-                padding: "5px 10px",
-                fontSize: "11px",
-                fontWeight: "700",
-                color: "#b45309",
-                boxShadow: "0 2px 6px rgba(0, 0, 0, 0.1)"
-              }}
-            >
-              🛣️ Kherki Daula Toll Plaza (₹80)
-            </div>
-
-            {/* Floating Map Controls */}
-            <div 
-              style={{
-                position: "absolute",
-                right: "20px",
-                bottom: "20px",
-                display: "flex",
-                flexDirection: "column",
-                gap: "8px"
-              }}
-            >
-              <button 
-                type="button" 
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  background: "#ffffff",
-                  border: "1px solid #cbd5e1",
-                  borderRadius: "8px",
-                  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
-                  display: "grid",
-                  placeItems: "center",
-                  cursor: "pointer"
-                }}
-                onClick={() => setZoomLevel(z => Math.min(z + 1, 18))}
-                title="Zoom In"
-              >
-                <ZoomIn size={18} />
-              </button>
-              <button 
-                type="button" 
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  background: "#ffffff",
-                  border: "1px solid #cbd5e1",
-                  borderRadius: "8px",
-                  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
-                  display: "grid",
-                  placeItems: "center",
-                  cursor: "pointer"
-                }}
-                onClick={() => setZoomLevel(z => Math.max(z - 1, 6))}
-                title="Zoom Out"
-              >
-                <ZoomOut size={18} />
-              </button>
-            </div>
-
-            {/* Map Style Selector Pills */}
-            <div 
-              style={{
-                position: "absolute",
-                left: "20px",
-                bottom: "20px",
-                display: "flex",
-                gap: "8px",
-                background: "rgba(255, 255, 255, 0.95)",
-                padding: "6px 10px",
-                borderRadius: "30px",
-                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-                border: "1px solid #e2e8f0"
-              }}
-            >
-              {["Standard", "Satellite", "Terrain"].map(style => (
-                <button
-                  type="button"
-                  key={style}
-                  onClick={() => setMapStyle(style)}
-                  style={{
-                    border: 0,
-                    background: mapStyle === style ? "#2563eb" : "transparent",
-                    color: mapStyle === style ? "#ffffff" : "#475569",
-                    padding: "4px 12px",
-                    borderRadius: "20px",
-                    fontSize: "12px",
-                    fontWeight: "600",
-                    cursor: "pointer"
-                  }}
-                >
-                  {style}
-                </button>
-              ))}
-            </div>
+        {/* Live Map Legend Pill */}
+        <div 
+          style={{
+            position: "absolute",
+            bottom: "24px",
+            left: "16px",
+            zIndex: 1000,
+            background: "rgba(255, 255, 255, 0.95)",
+            backdropFilter: "blur(6px)",
+            padding: "8px 16px",
+            borderRadius: "30px",
+            boxShadow: "0 4px 14px rgba(0, 0, 0, 0.12)",
+            display: "flex",
+            alignItems: "center",
+            gap: "14px",
+            fontSize: "12px",
+            fontWeight: "600",
+            color: "#334155",
+            border: "1px solid #e2e8f0"
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <span style={{ width: "16px", height: "4px", background: "#2563eb", borderRadius: "4px" }} />
+            NH-48 Express Route
           </div>
-        )}
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <span style={{ width: "10px", height: "10px", background: "#10b981", borderRadius: "50%" }} />
+            Pickup
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <span style={{ width: "10px", height: "10px", background: "#2563eb", borderRadius: "50%" }} />
+            Destination
+          </div>
+        </div>
       </div>
 
-      {/* Note about API key */}
+      {/* Corridor Summary Metrics */}
       <div 
         style={{
-          marginTop: "14px",
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-          fontSize: "12px",
-          color: "#64748b"
+          marginTop: "16px",
+          display: "grid",
+          gridTemplateColumns: "repeat(3, 1fr)",
+          gap: "14px"
         }}
       >
-        <Info size={15} style={{ color: "#2563eb", flexShrink: 0 }} />
-        <span>
-          To connect live satellite tiles directly from Mappls, provide your access key as <code>VITE_MAPPLS_KEY=your_key</code> in <code>.env</code>.
-        </span>
+        <div style={{ background: "#ffffff", padding: "14px 18px", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
+          <small style={{ color: "#64748b", textTransform: "uppercase", fontSize: "11px", fontWeight: "700" }}>TOTAL DISTANCE</small>
+          <strong style={{ display: "block", fontSize: "18px", color: "#0f172a", marginTop: "2px" }}>32.4 km</strong>
+          <span style={{ fontSize: "12px", color: "#64748b" }}>Via NH-48 Express Highway</span>
+        </div>
+
+        <div style={{ background: "#ffffff", padding: "14px 18px", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
+          <small style={{ color: "#64748b", textTransform: "uppercase", fontSize: "11px", fontWeight: "700" }}>TRAVEL DURATION</small>
+          <strong style={{ display: "block", fontSize: "18px", color: "#2563eb", marginTop: "2px" }}>~45 minutes</strong>
+          <span style={{ fontSize: "12px", color: "#64748b" }}>Moderate highway traffic</span>
+        </div>
+
+        <div style={{ background: "#ffffff", padding: "14px 18px", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
+          <small style={{ color: "#64748b", textTransform: "uppercase", fontSize: "11px", fontWeight: "700" }}>TOLL CHECKPOINT</small>
+          <strong style={{ display: "block", fontSize: "18px", color: "#d97706", marginTop: "2px" }}>₹80 FASTag</strong>
+          <span style={{ fontSize: "12px", color: "#64748b" }}>Kherki Daula Plaza (1 toll)</span>
+        </div>
       </div>
     </div>
   );
