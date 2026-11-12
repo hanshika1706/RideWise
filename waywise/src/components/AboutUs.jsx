@@ -43,11 +43,12 @@ const problems = [
       "Traffic congestion, road closures, and diversions can disrupt a journey without sufficient warning.",
   },
   {
-    icon: IndianRupee,
-    title: "Unclear Travel Costs",
-    description:
-      "Toll charges and estimated fares are not always easy to compare before choosing a route.",
-  },
+  icon: IndianRupee,
+  title: "Multi-Vehicle Fare Comparison",
+  description:
+    "Compare estimated fares for Hatchbacks, Sedans, Auto Rickshaws, and Bike Taxis using route distance and toll inputs.",
+  status: "Available in demo",
+}, 
   {
     icon: Bell,
     title: "Delayed Travel Updates",
@@ -101,7 +102,7 @@ const solutions = [
   },
 ];
 
-export default function AboutUs({ onBack, onBookCab }) {
+export default function AboutUs({ onBack, onCompareFares }) {
   return (
     <section className="about-page">
       {/* HERO SECTION */}
@@ -109,8 +110,8 @@ export default function AboutUs({ onBack, onBookCab }) {
       <div className="about-hero">
         <button
           type="button"
-          className="about-back"
-          onClick={onBack}
+          className="about-primary-btn"
+          onClick={onCompareFares}
         >
           <ArrowLeft size={17} />
           Back to Home
@@ -137,7 +138,7 @@ export default function AboutUs({ onBack, onBookCab }) {
             <button
               type="button"
               className="about-primary-btn"
-              onClick={onBookCab}
+              onClick={onCompareFares}
             >
               Explore Cab Booking
               <ArrowRight size={17} />
