@@ -1,18 +1,22 @@
+
 import {
   ArrowLeft,
   ArrowRight,
   CarFront,
-  MapPin,
   Route,
   TrafficCone,
-  Camera,
-  Bell,
+  Bike,
   IndianRupee,
   ShieldCheck,
   Navigation,
   CheckCircle2,
   Target,
   Lightbulb,
+  Map,
+  Calculator,
+  Clock3,
+  Wallet,
+  MapPin,
 } from "lucide-react";
 
 import "../aboutUs.css";
@@ -20,96 +24,104 @@ import "../aboutUs.css";
 const problems = [
   {
     icon: Route,
-    title: "Confusing Route Suggestions",
+    title: "Too Many Route Choices",
     description:
-      "Traditional navigation apps often recommend routes automatically, leaving commuters with limited clarity about alternative choices.",
+      "Commuters often struggle to understand alternative routes and decide which journey offers the best balance of time, distance and cost.",
   },
   {
-    icon: Navigation,
-    title: "Unclear Navigation Instructions",
+    icon: Clock3,
+    title: "Uncertain Travel Time",
     description:
-      "Complicated directions and unfamiliar roads can make everyday journeys stressful.",
-  },
-  {
-    icon: Camera,
-    title: "Lack of Visual Guidance",
-    description:
-      "Text-based navigation can be difficult to follow without recognizable landmarks or image-based guidance.",
-  },
-  {
-    icon: TrafficCone,
-    title: "Unexpected Roadblocks",
-    description:
-      "Traffic congestion, road closures, and diversions can disrupt a journey without sufficient warning.",
+      "Choosing a route without understanding its estimated journey duration can make everyday travel difficult to plan.",
   },
   {
     icon: IndianRupee,
-    title: "Unclear Travel Costs",
+    title: "Unpredictable Travel Expenses",
     description:
-      "Toll charges and estimated fares are not always easy to compare before choosing a route.",
+      "Different transportation options come with different pricing structures, making it difficult to estimate the total cost beforehand.",
   },
   {
-    icon: Bell,
-    title: "Delayed Travel Updates",
+    icon: Wallet,
+    title: "Hidden Toll & Fare Costs",
     description:
-      "Commuters need timely information about heavy traffic, roadblocks, and changing road conditions.",
+      "Base fares, distance charges and toll expenses can make it difficult for commuters to understand what they are actually paying for.",
+  },
+  {
+
+    icon: IndianRupee,
+    title: "Unclear Travel Expenses",
+    description:
+      "Commuters may find it difficult to compare transportation costs and understand how distance, vehicle type, and tolls affect their fares.",
+  },
+  {
+    icon: Navigation,
+    title: "Limited Travel Flexibility",
+    description:
+      "Not every commuter has the same priorities. Some prefer the fastest route, while others want the most economical option.",
+  },
+  {
+    icon: MapPin,
+    title: "Fragmented Travel Information",
+    description:
+      "Finding route information, comparing transportation costs and planning a journey across different platforms can be inconvenient."
   },
 ];
 
 const solutions = [
   {
-    icon: Route,
-    title: "Compare Routes",
+    icon: Map,
+    title: "Mappls-Powered Navigation",
     description:
-      "Compare available route options based on estimated time, distance, fares, and toll charges.",
+      "Explore interactive maps and access route information through our integrated Mappls Maps API.",
+    status: "Available in demo",
+  },
+  {
+    icon: IndianRupee,
+    title: "Multi-Vehicle Fare Comparison",
+    description:
+      "Compare estimated fares for Hatchbacks, Sedans, Auto Rickshaws, and Bike Taxis using route distance and toll inputs.",
+    status: "Available in demo",
+  },
+  {
+    icon: Calculator,
+    title: "Multi-Vehicle Fare Calculator",
+    description:
+      "Get estimated travel costs for Sedan, Hatchback, Auto Rickshaw and Bike Taxi options using distance-based fare calculations.",
+    status: "Available in demo",
+  },
+  {
+    icon: IndianRupee,
+    title: "Transparent Fare Breakdown",
+    description:
+      "Understand how your estimated fare is calculated through base fare, distance charges and applicable toll costs.",
     status: "Available in demo",
   },
   {
     icon: CarFront,
-    title: "Cab Booking Experience",
+    title: "Transparent Fare Breakdown",
     description:
-      "Explore different vehicle categories, compare sample fares, and simulate a cab booking.",
+      "Help commuters understand estimated base fares, distance charges, and toll costs before making a travel decision.",
     status: "Available in demo",
-  },
-  {
-    icon: Camera,
-    title: "Image-Based Navigation",
-    description:
-      "We envision navigation supported by recognizable landmarks and visual references.",
-    status: "Planned feature",
   },
   {
     icon: TrafficCone,
-    title: "Traffic & Roadblock Alerts",
+    title: "Traffic & Road Condition Alerts",
     description:
-      "Our goal is to provide timely warnings about congestion, closures, and route disruptions.",
-    status: "Planned feature",
-  },
-  {
-    icon: IndianRupee,
-    title: "Transparent Fare Comparison",
-    description:
-      "Help commuters understand estimated travel costs and toll charges before making a decision.",
-    status: "Available in demo",
-  },
-  {
-    icon: Bell,
-    title: "Instant Journey Updates",
-    description:
-      "We aim to keep commuters informed when road conditions change during their journey.",
+      "Our future roadmap includes better awareness of road disruptions, congestion and unexpected travel conditions.",
     status: "Planned feature",
   },
 ];
 
-export default function AboutUs({ onBack, onBookCab }) {
+export default function AboutUs({ onBack, onCompareFares }) {
   return (
     <section className="about-page">
+
       {/* HERO SECTION */}
 
       <div className="about-hero">
         <button
           type="button"
-          className="about-back"
+          className="about-primary-btn"
           onClick={onBack}
         >
           <ArrowLeft size={17} />
@@ -122,81 +134,96 @@ export default function AboutUs({ onBack, onBookCab }) {
           </span>
 
           <h1>
-            Smarter Routes.
+            Smarter Mobility.
             <br />
-            <span>Simpler Commutes.</span>
+            <span>Better Journeys.</span>
           </h1>
 
           <p>
-            WayWise is a student-built mobility platform
-            designed to make everyday commuting by cab
-            easier, clearer, and more convenient.
+            WayWise is a smart mobility and route-planning
+            platform designed to help everyday commuters
+            compare routes, estimate travel expenses and
+            make more informed transportation decisions.
           </p>
 
           <div className="about-hero-actions">
             <button
               type="button"
+              className="about-primary-btn"
+              onClick={onCompareFares}
+            >
+              Explore Fare Comparison
+              <ArrowRight size={17} />
+            </button>
+
+            <button
+              type="button"
               className="about-outline-btn"
               onClick={onBack}
             >
-              ← Back to Home
+              Explore WayWise
             </button>
           </div>
         </div>
       </div>
 
-      {/* INTRODUCTION */}
-
       <div className="about-container">
+
+        {/* INTRODUCTION */}
+
         <section className="about-intro">
           <span className="about-section-label">
             WHO WE ARE
           </span>
 
           <h2>
-            Making everyday travel less complicated.
+            Making every journey a smarter decision.
           </h2>
 
           <p>
-            Every day, students, professionals, and
-            commuters depend on navigation applications
-            to reach their destinations.
+            Travelling from one place to another should
+            be simple. Yet, commuters frequently face
+            questions about which route to take, how
+            long the journey will take and how much
+            the trip will cost.
           </p>
 
           <p>
-            However, finding a route is not always the
-            same as understanding it. Automatic route
-            recommendations, unclear directions,
-            unexpected traffic, and hidden travel
-            expenses can make even familiar journeys
-            frustrating.
+            WayWise brings essential travel-planning
+            information together in one platform.
+            With Mappls-powered mapping, intelligent
+            route comparison and a multi-vehicle fare
+            calculation system, users can explore
+            different travel options before beginning
+            their journey.
           </p>
 
           <p>
-            WayWise was created around a simple idea:
+            Our idea is simple:
             <strong>
-              {" "}commuters should have more clarity
-              and control over how they travel.
+              {" "}give commuters the information,
+              flexibility and confidence to choose
+              the journey that works best for them.
             </strong>
           </p>
         </section>
 
-        {/* PROBLEMS */}
+        {/* PROBLEM SECTION */}
 
         <section className="about-section">
           <div className="about-section-heading">
             <span className="about-section-label">
-              THE PROBLEM
+              THE CHALLENGE
             </span>
 
             <h2>
-              Why does everyday navigation
-              feel so complicated?
+              Travel planning should not be complicated.
             </h2>
 
             <p>
-              We identified common challenges that
-              can make daily commuting stressful.
+              We identified some everyday commuting
+              challenges that inspired the development
+              of WayWise.
             </p>
           </div>
 
@@ -222,21 +249,21 @@ export default function AboutUs({ onBack, onBookCab }) {
           </div>
         </section>
 
-        {/* SOLUTIONS */}
+        {/* FEATURES SECTION */}
 
         <section className="about-section">
           <div className="about-section-heading">
             <span className="about-section-label">
-              OUR APPROACH
+              WHAT WAYWISE OFFERS
             </span>
 
             <h2>
-              A smarter way to plan your journey.
+              Everything you need to plan a better journey.
             </h2>
 
             <p>
               WayWise brings route comparison and
-              a cab-booking prototype together,
+              multi-vehicle fare estimation together,
               with more intelligent navigation
               capabilities planned for the future.
             </p>
@@ -278,6 +305,104 @@ export default function AboutUs({ onBack, onBookCab }) {
           </div>
         </section>
 
+        {/* FEATURE HIGHLIGHT */}
+
+        <section className="about-section">
+          <div className="about-section-heading">
+            <span className="about-section-label">
+              FEATURE SPOTLIGHT
+            </span>
+
+            <h2>
+              More than navigation. Smarter fare decisions.
+            </h2>
+
+            <p>
+              Our multi-vehicle fare calculation engine
+              uses route distance and toll information
+              to provide estimated transportation costs.
+            </p>
+          </div>
+
+          <div className="about-grid">
+            <article className="about-card solution-card">
+              <div className="about-icon solution-icon">
+                <CarFront size={23} />
+              </div>
+
+              <h3>Cab Fare Estimation</h3>
+
+              <p>
+                Estimate Sedan and Hatchback fares using
+                a base fare, per-kilometre rate and
+                applicable toll charges.
+              </p>
+
+              <span className="about-status available">
+                <CheckCircle2 size={13} />
+                Available in demo
+              </span>
+            </article>
+
+            <article className="about-card solution-card">
+              <div className="about-icon solution-icon">
+                <Navigation size={23} />
+              </div>
+
+              <h3>Auto Fare Estimation</h3>
+
+              <p>
+                Calculate estimated Auto Rickshaw costs
+                using a metered fare structure and
+                journey distance.
+              </p>
+
+              <span className="about-status available">
+                <CheckCircle2 size={13} />
+                Available in demo
+              </span>
+            </article>
+
+            <article className="about-card solution-card">
+              <div className="about-icon solution-icon">
+                <Bike size={23} />
+              </div>
+
+              <h3>Bike Taxi Estimation</h3>
+
+              <p>
+                Explore a budget-friendly Bike Taxi
+                option with distance-based estimated
+                fare calculations.
+              </p>
+
+              <span className="about-status available">
+                <CheckCircle2 size={13} />
+                Available in demo
+              </span>
+            </article>
+
+            <article className="about-card solution-card">
+              <div className="about-icon solution-icon">
+                <IndianRupee size={23} />
+              </div>
+
+              <h3>Detailed Fare Breakdown</h3>
+
+              <p>
+                Understand the components of your
+                estimated journey cost:
+                Base Fare + Distance Fare + Tolls.
+              </p>
+
+              <span className="about-status available">
+                <CheckCircle2 size={13} />
+                Available in demo
+              </span>
+            </article>
+          </div>
+        </section>
+
         {/* MISSION AND VISION */}
 
         <section className="about-mission-grid">
@@ -289,10 +414,10 @@ export default function AboutUs({ onBack, onBookCab }) {
             <h2>Our Mission</h2>
 
             <p>
-              To simplify daily commuting by helping
-              people compare routes, understand travel
-              costs, and make informed transportation
-              decisions.
+              To make everyday commuting more convenient
+              and transparent by bringing route comparison,
+              interactive mapping and intelligent fare
+              estimation together in one accessible platform.
             </p>
           </article>
 
@@ -304,11 +429,10 @@ export default function AboutUs({ onBack, onBookCab }) {
             <h2>Our Vision</h2>
 
             <p>
-              To build a commuter-friendly mobility
-              experience where navigation is intuitive,
-              travel information is transparent, and
-              changing road conditions are easier
-              to understand.
+              To create a smarter mobility experience
+              where every commuter can explore
+              transportation choices, understand travel
+              costs and make confident journey decisions.
             </p>
           </article>
         </section>
@@ -323,13 +447,43 @@ export default function AboutUs({ onBack, onBookCab }) {
           </h2>
 
           <p>
-            We believe navigation should empower
-            commuters instead of overwhelming them.
-            WayWise is being developed to make
-            travel planning more transparent,
-            accessible, and user-friendly.
+            We believe better travel begins with better
+            information. WayWise is built around the idea
+            that commuters should have the freedom to
+            compare, evaluate and choose how they travel,
+            without unnecessary complexity.
           </p>
         </section>
+
+        {/* CTA */}
+
+        <section className="about-cta">
+          <div>
+            <span className="about-section-label">
+              EXPERIENCE WAYWISE
+            </span>
+
+            <h2>
+              Ready to make your next journey smarter?
+            </h2>
+
+            <p>
+              Explore our fare comparison experience
+              and discover how WayWise helps you
+              compare travel options.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            className="about-primary-btn"
+            onClick={onCompareFares}
+          >
+            Compare Travel Fares
+            <ArrowRight size={17} />
+          </button>
+        </section>
+
       </div>
     </section>
   );

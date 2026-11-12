@@ -1493,7 +1493,7 @@ export default function App() {
         {page === 'about' && (
           <AboutUs
             onBack={() => go('home')}
-            onBookCab={() => go('cab-booking')}
+            onCompareFares={() => go('routes')}
           />
         )}
 
