@@ -2004,3 +2004,297 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .leaflet-popup-tip {
   box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15) !important;
 }
+
+
+/* --- RideWise Fare Calculation Engine & Vehicle Mode Styles --- */
+.vehicle-selector-wrap {
+  background: var(--surface, #ffffff);
+  border: 1px solid var(--border, #cbd5e1);
+  border-radius: var(--radius-md, 8px);
+  padding: 14px;
+  margin-bottom: 20px;
+}
+
+.vehicle-selector-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.vehicle-selector-header label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--slate-700, #334155);
+  letter-spacing: 0.5px;
+}
+
+.vehicle-calc-note {
+  font-size: 11px;
+  color: var(--slate-500, #64748b);
+}
+
+.vehicle-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.vehicle-card {
+  background: var(--slate-50, #f8fafc);
+  border: 1.5px solid var(--border, #cbd5e1);
+  border-radius: var(--radius-sm, 6px);
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.vehicle-card:hover {
+  border-color: var(--primary, #3b82f6);
+  transform: translateY(-1px);
+}
+
+.vehicle-card.active {
+  border-color: var(--primary, #3b82f6);
+  background: #eff6ff;
+  box-shadow: 0 0 0 1px #3b82f655;
+}
+
+.vehicle-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.vehicle-icon-box {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  background: #e2e8f0;
+  color: #1e293b;
+  display: grid;
+  place-items: center;
+}
+
+.vehicle-card.active .vehicle-icon-box {
+  background: var(--primary, #3b82f6);
+  color: #ffffff;
+}
+
+.vehicle-capacity {
+  font-size: 10px;
+  background: #e2e8f0;
+  color: #475569;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-weight: 600;
+}
+
+.vehicle-info strong {
+  display: block;
+  font-size: 12px;
+  color: #1e293b;
+  margin-bottom: 2px;
+}
+
+.vehicle-info small {
+  display: block;
+  font-size: 10px;
+  color: #64748b;
+  line-height: 1.3;
+  height: 26px;
+  overflow: hidden;
+}
+
+.vehicle-card-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px dashed #cbd5e1;
+}
+
+.vehicle-fare b {
+  font-size: 14px;
+  color: #0f172a;
+}
+
+.toll-tag {
+  display: block;
+  font-size: 10px;
+  color: #15803d;
+  font-weight: 600;
+}
+
+.breakdown-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 0;
+  background: none;
+  color: var(--primary, #3b82f6);
+  font-size: 11px;
+  padding: 2px 0;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.breakdown-btn:hover {
+  text-decoration: underline;
+}
+
+/* Fare Breakdown Modal */
+.fare-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(3px);
+  display: grid;
+  place-items: center;
+  z-index: 999;
+  padding: 16px;
+}
+
+.fare-modal-card {
+  width: min(100%, 440px);
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  animation: modalFadeIn 0.2s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.fare-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.fare-modal-header h3 {
+  margin: 3px 0 0;
+  font-size: 15px;
+  color: #0f172a;
+}
+
+.fare-modal-close {
+  border: 0;
+  background: none;
+  color: #64748b;
+  display: grid;
+  place-items: center;
+  padding: 6px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.fare-modal-close:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.fare-total-banner {
+  background: linear-gradient(135deg, #0f172a, #1e3a8a);
+  color: #ffffff;
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.fare-total-banner small {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.8px;
+  color: #93c5fd;
+  margin-bottom: 3px;
+}
+
+.fare-total-amount {
+  font-size: 26px;
+  font-weight: 800;
+}
+
+.fare-distance-badge {
+  font-size: 11px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  padding: 5px 10px;
+  border-radius: 14px;
+  font-weight: 600;
+}
+
+.fare-breakdown-list {
+  padding: 16px 20px;
+  display: grid;
+  gap: 11px;
+}
+
+.fare-breakdown-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+}
+
+.fare-breakdown-item strong {
+  display: block;
+  color: #1e293b;
+}
+
+.fare-breakdown-item small {
+  display: block;
+  font-size: 10px;
+  color: #64748b;
+}
+
+.fare-breakdown-item span {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.surge-item {
+  color: #d97706;
+}
+
+.surge-item strong, .surge-item span {
+  color: #d97706;
+}
+
+.toll-cost {
+  color: #2563eb;
+}
+
+.toll-free {
+  color: #16a34a;
+}
+
+.fare-modal-footer {
+  padding: 14px 20px 18px;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.fare-modal-footer .muted-note {
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #64748b;
+}
+
+@media (max-width: 680px) {
+  .vehicle-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

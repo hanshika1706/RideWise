@@ -2,12 +2,15 @@ import { useEffect, useMemo, useState } from 'react';
 import CabBooking from "./components/CabBooking.jsx";
 import AboutUs from "./components/AboutUs.jsx";
 import MapplsMap from "./components/MapplsMap.jsx";
+import FareBreakdownModal from "./components/FareBreakdownModal.jsx";
+import VehicleSelector from "./components/VehicleSelector.jsx";
+import { calculateFare, calculateAllVehicleFares } from "./utils/fareEngine.js";
 import {
   MapPin, Navigation, Route, Clock3, IndianRupee, ChevronDown, ChevronRight,
   ArrowLeft, ArrowRight, ArrowUpDown, CarFront, ShieldCheck, Bell, Settings as SettingsIcon,
   UserRound, Home, Search, LogOut, Plus, Trash2, Pencil, Check, LocateFixed,
   SlidersHorizontal, Eye, LockKeyhole, HelpCircle, Menu, X, ExternalLink,
-  Star, Sparkles, MessageSquare, Send, CheckCircle2, AlertCircle, Compass, Zap
+  Star, Sparkles, MessageSquare, Send, CheckCircle2, AlertCircle, Compass, Zap, Info
 } from 'lucide-react';
 
 const initialRoutes = [
@@ -28,6 +31,8 @@ export default function App() {
   const [origin, setOrigin] = useState('BML Munjal University');
   const [destination, setDestination] = useState('Ambience Mall');
   const [selectedRoute, setSelectedRoute] = useState(1);
+  const [selectedVehicle, setSelectedVehicle] = useState("sedan");
+  const [activeBreakdown, setActiveBreakdown] = useState(null);
   const [routeFilter, setRouteFilter] = useState('all');
   const [rideConfirmed, setRideConfirmed] = useState(false);
   const [mobileNav, setMobileNav] = useState(false);
@@ -156,16 +161,29 @@ export default function App() {
     }
   }, [page]);
 
+  const dynamicRoutes = useMemo(() => {
+    return initialRoutes.map(route => {
+      const fareInfo = calculateFare(selectedVehicle, route.distanceKm, route.toll);
+      const allVehicleFares = calculateAllVehicleFares(route.distanceKm, route.toll);
+      return {
+        ...route,
+        fare: fareInfo.totalFare,
+        fareData: fareInfo,
+        allVehicleFares
+      };
+    });
+  }, [selectedVehicle]);
+
   const chosenRoute = useMemo(() => {
-    return initialRoutes.find(r => r.id === selectedRoute) || initialRoutes[0];
-  }, [selectedRoute]);
+    return dynamicRoutes.find(r => r.id === selectedRoute) || dynamicRoutes[0];
+  }, [dynamicRoutes, selectedRoute]);
 
   const filteredRoutes = useMemo(() => {
-    if (routeFilter === 'fastest') return initialRoutes.filter(r => r.tag === 'Fastest');
-    if (routeFilter === 'cheapest') return initialRoutes.filter(r => r.tag === 'Cheapest');
-    if (routeFilter === 'toll-free') return initialRoutes.filter(r => r.toll === 0);
-    return initialRoutes;
-  }, [routeFilter]);
+    if (routeFilter === 'fastest') return dynamicRoutes.filter(r => r.tag === 'Fastest');
+    if (routeFilter === 'cheapest') return dynamicRoutes.filter(r => r.tag === 'Cheapest');
+    if (routeFilter === 'toll-free') return dynamicRoutes.filter(r => r.toll === 0);
+    return dynamicRoutes;
+  }, [dynamicRoutes, routeFilter]);
 
   const mapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}&travelmode=driving`;
   const wazeUrl = `https://waze.com/ul?q=${encodeURIComponent(destination)}&navigate=yes`;
@@ -480,6 +498,15 @@ export default function App() {
               ))}
             </div>
 
+            {chosenRoute.allVehicleFares && (
+              <VehicleSelector
+                selectedVehicle={selectedVehicle}
+                onSelectVehicle={setSelectedVehicle}
+                vehicleFares={chosenRoute.allVehicleFares}
+                onOpenBreakdown={setActiveBreakdown}
+              />
+            )}
+
             <div className="routes-layout">
               <div className="route-list">
                 {filteredRoutes.map(route => (
@@ -525,6 +552,20 @@ export default function App() {
                       >
                         {selectedRoute === route.id ? 'Proceed with Selected Route' : 'Select & Inspect Details'}
                       </button>
+                      {route.fareData && (
+                        <button
+                          type="button"
+                          className="btn btn-outline"
+                          style={{ height: '36px', fontSize: '11px', whiteSpace: 'nowrap' }}
+                          title="View itemized fare breakdown"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveBreakdown(route.fareData);
+                          }}
+                        >
+                          <Info size={13} /> Breakdown
+                        </button>
+                      )}
                     </div>
                   </article>
                 ))}
@@ -605,7 +646,17 @@ export default function App() {
                 <div>
                   <small>ESTIMATED CAB FARE</small>
                   <strong>₹{chosenRoute.fare}</strong>
-                  <span>Indicative standard vehicle price</span>
+                  <span>Indicative {chosenRoute.fareData?.vehicleName || "Standard"} price</span>
+                  {chosenRoute.fareData && (
+                    <button
+                      type="button"
+                      className="breakdown-btn"
+                      style={{ marginTop: "4px" }}
+                      onClick={() => setActiveBreakdown(chosenRoute.fareData)}
+                    >
+                      <Info size={11} /> View itemized calculation
+                    </button>
+                  )}
                 </div>
                 <div>
                   <small>TOLLWAY FEES</small>
@@ -1149,6 +1200,14 @@ export default function App() {
             setShowAddPlaceModal(false);
             notify(`"${newPlace.name}" added to saved places.`);
           }}
+        />
+      )}
+
+      {/* FARE BREAKDOWN MODAL */}
+      {activeBreakdown && (
+        <FareBreakdownModal
+          fareData={activeBreakdown}
+          onClose={() => setActiveBreakdown(null)}
         />
       )}
 

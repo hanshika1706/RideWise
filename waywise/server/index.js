@@ -110,6 +110,40 @@ app.get('/api/config', (_req, res) => {
 
 // ================= ROUTE PLANNER & VEHICLES =================
 
+// Multi-vehicle fare calculation endpoint for route comparison
+app.post('/api/fares/compare', (req, res) => {
+  const { distanceKm, tolls = 0 } = req.body || {};
+  const dist = Number(distanceKm);
+  const toll = Number(tolls) || 0;
+  if (!Number.isFinite(dist) || dist <= 0) {
+    return res.status(400).json({ error: 'Provide a valid distanceKm value.' });
+  }
+
+  const rates = [
+    { id: 'bike', name: 'Bike', base: 20, inc: 2, perKm: 6, fee: 5, tax: 0, tolls: 0, seats: 1 },
+    { id: 'auto', name: 'Auto', base: 30, inc: 1.5, perKm: 10, fee: 5, tax: 0, tolls: 0, seats: 3 },
+    { id: 'mini', name: 'Mini Cab', base: 40, inc: 1.5, perKm: 11.5, fee: 12, tax: 0.05, tolls: toll, seats: 4 },
+    { id: 'sedan', name: 'Sedan', base: 50, inc: 1.5, perKm: 14, fee: 15, tax: 0.05, tolls: toll, seats: 4 }
+  ];
+
+  const vehicles = rates.map(r => {
+    const billable = Math.max(0, dist - r.inc);
+    const distFare = Math.round(billable * r.perKm);
+    const subtotal = r.base + distFare;
+    const taxVal = Math.round(subtotal * r.tax);
+    const total = subtotal + r.tolls + r.fee + taxVal;
+    return {
+      id: r.id,
+      name: r.name,
+      seats: r.seats,
+      totalFare: total,
+      breakdown: { baseFare: r.base, billableKm: billable, distanceFare: distFare, tolls: r.tolls, platformFee: r.fee, taxes: taxVal }
+    };
+  });
+
+  res.json({ success: true, distanceKm: dist, tolls: toll, currency: 'INR', vehicles });
+});
+
 app.get('/api/routes', (_req, res) => {
   res.json({ success: true, count: defaultRoutes.length, routes: defaultRoutes });
 });
