@@ -460,17 +460,6 @@ export default function App() {
                 ))}
               </div>
             </section>
-
-            {/* SECONDARY CALL TO ACTION BANNER */}
-            <section className="home-secondary">
-              <div>
-                <h2>Ready to book your next comfortable ride?</h2>
-                <p>Choose from bikes, city autos, mini cabs, and premium sedans with clear fare estimates and instant confirmation.</p>
-              </div>
-              <button className="btn btn-blue" onClick={() => go('cab-booking')}>
-                <CarFront size={17} /> Book a Cab Now <ArrowRight size={15} />
-              </button>
-            </section>
           </>
         )}
 

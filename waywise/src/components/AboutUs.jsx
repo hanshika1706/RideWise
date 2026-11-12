@@ -136,19 +136,10 @@ export default function AboutUs({ onBack, onBookCab }) {
           <div className="about-hero-actions">
             <button
               type="button"
-              className="about-primary-btn"
-              onClick={onBookCab}
-            >
-              Explore Cab Booking
-              <ArrowRight size={17} />
-            </button>
-
-            <button
-              type="button"
               className="about-outline-btn"
               onClick={onBack}
             >
-              Explore WayWise
+              ← Back to Home
             </button>
           </div>
         </div>
@@ -338,35 +329,6 @@ export default function AboutUs({ onBack, onBookCab }) {
             travel planning more transparent,
             accessible, and user-friendly.
           </p>
-        </section>
-
-        {/* CTA */}
-
-        <section className="about-cta">
-          <div>
-            <span className="about-section-label">
-              GET STARTED
-            </span>
-
-            <h2>
-              Ready to explore a smarter commute?
-            </h2>
-
-            <p>
-              Try our cab-booking prototype and
-              discover how WayWise helps you
-              compare travel options.
-            </p>
-          </div>
-
-          <button
-            type="button"
-            className="about-primary-btn"
-            onClick={onBookCab}
-          >
-            Book a Demo Cab
-            <ArrowRight size={17} />
-          </button>
         </section>
       </div>
     </section>
