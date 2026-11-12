@@ -43,17 +43,17 @@ const problems = [
       "Traffic congestion, road closures, and diversions can disrupt a journey without sufficient warning.",
   },
   {
-  icon: IndianRupee,
-  title: "Multi-Vehicle Fare Comparison",
-  description:
-    "Compare estimated fares for Hatchbacks, Sedans, Auto Rickshaws, and Bike Taxis using route distance and toll inputs.",
-  status: "Available in demo",
-}, 
-  {
-    icon: Bell,
-    title: "Delayed Travel Updates",
+    icon: IndianRupee,
+    title: "Multi-Vehicle Fare Comparison",
     description:
-      "Commuters need timely information about heavy traffic, roadblocks, and changing road conditions.",
+      "Compare estimated fares for Hatchbacks, Sedans, Auto Rickshaws, and Bike Taxis using route distance and toll inputs.",
+    status: "Available in demo",
+  },
+  {
+    icon: Navigation,
+    title: "Limited Travel Flexibility",
+    description:
+      "Not every commuter has the same priorities. Some prefer the fastest route, while others want the most economical option.",
   },
 ];
 
