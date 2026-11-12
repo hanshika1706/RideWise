@@ -3,11 +3,9 @@ import {
   ArrowLeft,
   ArrowRight,
   CarFront,
-  MapPin,
   Route,
   TrafficCone,
   Bike,
-  Bell,
   IndianRupee,
   ShieldCheck,
   Navigation,
@@ -18,6 +16,7 @@ import {
   Calculator,
   Clock3,
   Wallet,
+  MapPin,
 } from "lucide-react";
 
 import "../aboutUs.css";
@@ -106,7 +105,7 @@ const solutions = [
   },
 ];
 
-export default function AboutUs({ onBack, onBookCab }) {
+export default function AboutUs({ onBack, onCompareFares }) {
   return (
     <section className="about-page">
 
@@ -115,7 +114,7 @@ export default function AboutUs({ onBack, onBookCab }) {
       <div className="about-hero">
         <button
           type="button"
-          className="about-back"
+          className="about-primary-btn"
           onClick={onBack}
         >
           <ArrowLeft size={17} />
@@ -144,9 +143,9 @@ export default function AboutUs({ onBack, onBookCab }) {
             <button
               type="button"
               className="about-primary-btn"
-              onClick={onBookCab}
+              onClick={onCompareFares}
             >
-              Explore Cab Booking
+              Explore Fare Comparison
               <ArrowRight size={17} />
             </button>
 
@@ -256,10 +255,11 @@ export default function AboutUs({ onBack, onBookCab }) {
             </h2>
 
             <p>
-              From exploring routes to understanding
-              transportation costs, WayWise combines
-              useful mobility features in one
-              commuter-friendly experience.
+              WayWise brings route comparison and
+              multi-vehicle fare estimation together
+              in one commuter-friendly experience,
+              with more intelligent navigation
+              capabilities planned for the future.
             </p>
           </div>
 
@@ -299,7 +299,7 @@ export default function AboutUs({ onBack, onBookCab }) {
           </div>
         </section>
 
-        {/* NEW FEATURE HIGHLIGHT */}
+        {/* FEATURE HIGHLIGHT */}
 
         <section className="about-section">
           <div className="about-section-heading">
@@ -471,9 +471,9 @@ export default function AboutUs({ onBack, onBookCab }) {
           <button
             type="button"
             className="about-primary-btn"
-            onClick={onBookCab}
+            onClick={onCompareFares}
           >
-            Explore WayWise
+            Compare Travel Fares
             <ArrowRight size={17} />
           </button>
         </section>
