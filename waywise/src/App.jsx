@@ -192,6 +192,47 @@ export default function App() {
     notify('Locations swapped.');
   }
 
+  async function bookRoute(route) {
+    const newBooking = {
+      id: `RW-${Math.floor(10000000 + Math.random() * 90000000)}`,
+      pickup: origin,
+      destination: destination,
+      vehicle: 'Standard Sedan',
+      fare: route.fare,
+      paymentMethod: 'cash',
+      arrival: '5 min',
+      status: 'Confirmed',
+      submittedAt: new Date().toISOString()
+    };
+    try {
+      const res = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newBooking)
+      });
+      const ct = res.headers.get('content-type') || '';
+      if (ct.includes('application/json')) {
+        const data = await res.json();
+        if (data?.booking) {
+          setBookedRides(prev => [data.booking, ...prev.filter(b => b.id !== data.booking.id)]);
+        } else {
+          setBookedRides(prev => [newBooking, ...prev]);
+        }
+      } else {
+        setBookedRides(prev => [newBooking, ...prev]);
+      }
+    } catch {
+      setBookedRides(prev => [newBooking, ...prev]);
+    }
+    try {
+      const existing = JSON.parse(localStorage.getItem('waywise_bookings') || '[]');
+      localStorage.setItem('waywise_bookings', JSON.stringify([newBooking, ...existing]));
+    } catch {}
+    setRideConfirmed(true);
+    notify(`Booked ${route.name}! Driver arriving in 5 mins.`);
+    go('tracking');
+  }
+
   function toggleSetting(key) {
     setToggles(old => ({ ...old, [key]: !old[key] }));
     notify(`Setting updated: ${key}`);
@@ -249,9 +290,6 @@ export default function App() {
           <button className={page === 'routes' || page === 'details' || page === 'confirm' || page === 'tracking' ? 'nav-active' : ''} onClick={() => go('routes')}>
             <Compass size={14} /> Routes
           </button>
-          <button className={page === 'cab-booking' ? 'nav-active' : ''} onClick={() => go('cab-booking')}>
-            <CarFront size={14} /> Book Cab
-          </button>
           <button className={page === 'trips' ? 'nav-active' : ''} onClick={() => go('trips')}>
             <Clock3 size={14} /> My Trips {bookedRides.length > 0 && `(${bookedRides.length})`}
           </button>
@@ -268,12 +306,6 @@ export default function App() {
             <UserRound size={14} /> Profile
           </button>
         </nav>
-
-        <div className="topbar-actions">
-          <button className="topbar-book-btn" onClick={() => go('cab-booking')}>
-            <Zap size={14} /> Quick Book
-          </button>
-        </div>
       </header>
 
       {/* MAIN CONTENT AREA */}
@@ -453,10 +485,7 @@ export default function App() {
               </div>
               <div style={{ display: 'flex', gap: '10px' }}>
                 <button className="btn btn-outline" onClick={() => go('home')}>
-                  <ArrowLeft size={14} /> Edit Search
-                </button>
-                <button className="btn btn-blue" onClick={() => go('cab-booking')}>
-                  <CarFront size={14} /> Book Cab for this Route
+                  <ArrowLeft size={14} /> Back to Search
                 </button>
               </div>
             </div>
@@ -514,16 +543,28 @@ export default function App() {
 
                     <p>{route.detail}</p>
 
-                    <div style={{ display: 'flex', gap: '10px' }}>
+                    <div style={{ display: 'flex', gap: '10px', marginTop: '12px' }}>
                       <button 
-                        className={`btn ${selectedRoute === route.id ? 'btn-blue' : 'btn-dark'} full`}
+                        className="btn btn-blue"
+                        style={{ flex: 1, fontWeight: '700' }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedRoute(route.id);
+                          bookRoute(route);
+                        }}
+                      >
+                        ⚡ Book Now (₹{route.fare})
+                      </button>
+                      <button 
+                        className="btn btn-outline"
+                        style={{ fontSize: '12px' }}
                         onClick={(e) => {
                           e.stopPropagation();
                           setSelectedRoute(route.id);
                           go('details');
                         }}
                       >
-                        {selectedRoute === route.id ? 'Proceed with Selected Route' : 'Select & Inspect Details'}
+                        Inspect Details
                       </button>
                     </div>
                   </article>
@@ -694,11 +735,7 @@ export default function App() {
                 </button>
                 <button 
                   className="btn btn-blue" 
-                  onClick={() => {
-                    setRideConfirmed(true);
-                    notify('Journey confirmed! Navigating to live tracking.');
-                    go('tracking');
-                  }}
+                  onClick={() => bookRoute(chosenRoute)}
                 >
                   Confirm & Start Journey
                 </button>
